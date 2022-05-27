@@ -19,7 +19,7 @@ Let a bitstring $b_n\,...\,b_1\,b_0$, $b_i \in \{0,1\}$ represent the natural nu
 
 To increase a bitstring by 1, we evaluate the following 3 cases
 
-- `inc ⟨⟩`: if the bitstring is empty, the number should be 1
+- `inc ⟨⟩`: if the bitstring is empty, the next number should be 1
 
 ```agda
 inc ⟨⟩ = ⟨⟩ I
