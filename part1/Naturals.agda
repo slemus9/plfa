@@ -152,3 +152,103 @@ _^_ : ℕ → ℕ → ℕ
 m ^ 0 = 1
 m ^ (suc n) = m * (m ^ n)
 
+{-
+  Monus: 
+
+  Subtraction but, since there are no negative natural numbers,
+  if we subtract a larger number from a smaller one, we get zero
+-}
+_∸_ : ℕ → ℕ → ℕ
+m     ∸ zero = m
+zero  ∸ n = zero
+suc m ∸ suc n = m ∸ n
+
+{-
+  Exercise:
+
+  Compute 5 ∸ 3 and 3 ∸ 5, writing out your reasoning as a chain of equations.
+-}
+_ = 
+  begin 
+    5 ∸ 3
+  ≡⟨⟩ -- suc m ∸ suc n = m ∸ n
+    4 ∸ 2
+  ≡⟨⟩ -- suc m ∸ suc n = m ∸ n
+    3 ∸ 1
+  ≡⟨⟩ -- suc m ∸ suc n = m ∸ n
+    2 ∸ 0
+  ≡⟨⟩ -- m ∸ zero = m
+    2
+  ∎
+
+_ = 
+  begin 
+    3 ∸ 5
+  ≡⟨⟩ -- suc m ∸ suc n = m ∸ n
+    2 ∸ 4
+  ≡⟨⟩ -- suc m ∸ suc n = m ∸ n
+    1 ∸ 3
+  ≡⟨⟩ -- suc m ∸ suc n = m ∸ n
+    0 ∸ 2
+  ≡⟨⟩ -- zero ∸ n = zero
+    0
+  ∎
+
+-- Precedence
+-- infixl associates to the left, and infixr to the right
+infixl 6  _+_  _∸_
+infixl 7  _*_
+
+-- Use the usual efficient representation
+{-# BUILTIN NATPLUS _+_ #-}
+{-# BUILTIN NATTIMES _*_ #-}
+{-# BUILTIN NATMINUS _∸_ #-}
+
+{-
+  Bitstring
+
+  A more efficient representation of natural numbers
+-}
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+_ = ⟨⟩ I O I I -- Represents 1011
+
+{-
+  Exercise:
+
+  define:
+
+  inc: Bin → Bin - increments a natural number by one in the Bin respresentation
+  to: ℕ → Bin 
+  from: Bin → ℕ
+
+  (Notes on the solution at Naturals.md)
+-}
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (b O) = b I
+inc (b I) = (inc b) O
+
+_ : inc (⟨⟩ O) ≡ ⟨⟩ I
+_ = refl
+
+_ : inc (⟨⟩ I) ≡ ⟨⟩ I O
+_ = refl
+
+_ : inc (⟨⟩ I O) ≡ ⟨⟩ I I
+_ = refl
+
+_ : inc (⟨⟩ I I) ≡ ⟨⟩ I O O
+_ = refl
+
+_ : inc (⟨⟩ I O O) ≡ ⟨⟩ I O I
+_ = refl
+
+_ : inc (⟨⟩ I O I) ≡ ⟨⟩ I I O
+_ = refl
+
+_ : inc (⟨⟩ I O I I) ≡ ⟨⟩ I I O O
+_ = refl
