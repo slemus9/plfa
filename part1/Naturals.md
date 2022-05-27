@@ -15,7 +15,7 @@ data Bin : Set where
 inc : Bin → Bin
 ```
 
-Let a bitstring be $b_n\,...\,b_1\,b_0\;\;,b_i \in \{0,1\}$, that represents the natural number $b_02^0 + b_12^1 + ... + b_n2^n$
+Let a bitstring $b_n\,...\,b_1\,b_0$, $b_i \in \{0,1\}$ represent the natural number $b_02^0 + b_12^1 + ... + b_n2^n$
 
 To increase a bitstring by 1, we evaluate the following 3 cases
 
