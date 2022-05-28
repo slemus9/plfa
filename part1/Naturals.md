@@ -37,7 +37,9 @@ $$b_m\,b_{m-1}\,...\,0\,1_{n-1}\,...\,1_1\,1_0$$
 the represented natural number $x$ can be expressed as:
 
 $$x = y + S_{n-1}$$
+
 $$y \in \mathbb{N}$$
+
 $$S_n = \sum_{i=0}^n 2^i$$
 
 and $S_n$ can be expressed as:
