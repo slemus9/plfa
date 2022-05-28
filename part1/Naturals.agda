@@ -252,3 +252,36 @@ _ = refl
 
 _ : inc (⟨⟩ I O I I) ≡ ⟨⟩ I I O O
 _ = refl
+
+to : ℕ → Bin
+to zero   = ⟨⟩ O
+to (suc n)  = inc (to n)
+
+_ : to 11 ≡ ⟨⟩ I O I I
+_ = refl
+
+from : Bin → ℕ
+from ⟨⟩     = zero
+from (b O)  = 2 * from b 
+from (b I)  = 1 + 2 * from b
+
+_ : from (⟨⟩ I O I I) ≡ 11
+_ = refl
+
+_ : 0 ≡ from (to 0)
+_ = refl
+
+_ : 1 ≡ from (to 1)
+_ = refl
+
+_ : 2 ≡ from (to 2)
+_ = refl
+
+_ : 3 ≡ from (to 3)
+_ = refl
+
+_ : 4 ≡ from (to 4)
+_ = refl
+
+-- Standard Library
+-- import Data.Nat using (ℕ; zero; suc; _+_; _*_; _^_; _∸_)

@@ -37,7 +37,7 @@ $$b_m\,b_{m-1}\,...\,0\,1_{n-1}\,...\,1_1\,1_0$$
 the represented natural number $x$ can be expressed as:
 
 $$x = y + S_{n-1}$$
-$$y \in \N$$
+$$y \in \mathbb{N}$$
 $$S_n = \sum_{i=0}^n 2^i$$
 
 and $S_n$ can be expressed as:
@@ -71,3 +71,43 @@ inc (b O) = b I
 inc (b I) = (inc b) O
 ```
 
+## to
+
+```agda
+to : ℕ → Bin
+```
+Since `suc n = n + 1`, the bitstring representation of `suc n` can be expressed as `to (suc n) = inc (to n)`
+
+```agda
+to : ℕ → Bin
+to zero   = ⟨⟩ O
+to (suc n)  = inc (to n)
+```
+## from 
+
+Let a bitstring $b_n\,...\,b_1\,b_0$, $b_i \in \{0,1\}$ represent the natural number $b_02^0 + b_12^1 + ... + b_n2^n = x$, which can also be expressed as:
+
+$$
+\begin{align*}
+x &= b_0 + b_12^1 + ... + b_n2^n \\
+  &= b_0 + 2(b_1 + b_22 + ... + b_n2^{n-1}) \\
+  &= b_0 + 2(b_1 + 2(b_2 + b_32 + ... + b_n2^{n-2})) \\
+  &=...
+\end{align*}
+$$
+
+from this, we can define the following recursion to transform a bitstring to a natural number:
+
+$$
+\begin{align*}
+from(0)           &= 0 \\
+from(b_{i+1}\,b_i)&= b_i + 2 \cdot from(b_{i+1})
+\end{align*}
+$$
+
+```agda
+from : Bin → ℕ
+from ⟨⟩     = zero
+from (b O)  = 2 * from b 
+from (b I)  = 1 + 2 * from b
+```
