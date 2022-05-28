@@ -15,7 +15,7 @@ data Bin : Set where
 inc : Bin → Bin
 ```
 
-Let a bitstring $b_n\,...\,b_1\,b_0$, $b_i \in \{0,1\}$ represent the natural number $b_02^0 + b_12^1 + ... + b_n2^n$
+Let a bitstring $b_n...b_1b_0$, $b_i \in \{0,1\}$ represent the natural number $b_02^0 + b_12^1 + ... + b_n2^n$
 
 To increase a bitstring by 1, we evaluate the following 3 cases
 
@@ -32,7 +32,7 @@ inc (b O) = b I
 ```
 - `inc (b I)`: If a bitstring of size $m$ starts with a chain of $1$'s of size $n$:
 
-$$b_m\,b_{m-1}\,...\,0\,1_{n-1}\,...\,1_1\,1_0$$
+$$b_mb_{m-1}...01_{n-1}...1_11_0$$
 
 the represented natural number $x$ can be expressed as:
 
@@ -62,7 +62,7 @@ $$
 
 This means that, to increase the bitstring by one, we can change the $n$-th bit to 1, and leave $b_{n-1}=...=b_1=b_0=0$:
 
-$$b_m\,b_{m-1}\,...\,1\,0_{n-1}\,...\,0_1\,0_0$$
+$$b_mb_{m-1}...10_{n-1}...0_10_0$$
 
 As a result we obtain the following definition:
 
@@ -87,7 +87,7 @@ to (suc n)  = inc (to n)
 ```
 ## from 
 
-Let a bitstring $b_n\,...\,b_1\,b_0$, $b_i \in \{0,1\}$ represent the natural number $b_02^0 + b_12^1 + ... + b_n2^n = x$, which can also be expressed as:
+Let a bitstring $b_n...b_1b_0$, $b_i \in \{0,1\}$ represent the natural number $b_02^0 + b_12^1 + ... + b_n2^n = x$, which can also be expressed as:
 
 $$
 \begin{align*}
@@ -103,7 +103,7 @@ from this, we can define the following recursion to transform a bitstring to a n
 $$
 \begin{align*}
 from(0)           &= 0 \\
-from(b_{i+1}\,b_i)&= b_i + 2 \cdot from(b_{i+1})
+from(b_{i+1}b_i)&= b_i + 2 \cdot from(b_{i+1})
 \end{align*}
 $$
 
