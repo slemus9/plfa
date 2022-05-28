@@ -62,7 +62,7 @@ $$
 
 This means that, to increase the bitstring by one, we can change the $n$-th bit to 1, and leave $b_{n-1}=...=b_1=b_0=0$:
 
-$$b_mb_{m-1}...10_{n-1}...0_10_0$$
+$$b_mb_{m-1}...1_n0_{n-1}...0_10_0$$
 
 As a result we obtain the following definition:
 
@@ -102,8 +102,8 @@ from this, we can define the following recursion to transform a bitstring to a n
 
 $$
 \begin{align*}
-from(0)           &= 0 \\
-from(b_{i+1}b_i)&= b_i + 2 \cdot from(b_{i+1})
+from(0)             &= 0 \\
+from(b_{n..i+1}b_i) &= b_i + 2 \cdot from(b_{n..i+1})
 \end{align*}
 $$
 
