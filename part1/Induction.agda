@@ -221,4 +221,72 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 -}
 
 
+-- Associativity with rewrite
++-assoc′ : ∀ (m n p : ℕ) → (m + n) + p ≡ m + (n + p)
++-assoc′ zero n p = refl
+{-
+  In the inductive case we must show that:
+
+    (suc m + n) + p ≡ suc m + (n + p)
+    suc ((m + n) + p) ≡ suc (m + (n + p))
+
+  After using the inductive hypothesis these two terms are
+  equal and we can use refl. With 
+
+    rewrite +-assoc′ m n p
+  
+  we are rewriting the equation with the inductive hypothesis
+-}
++-assoc′ (suc m) n p rewrite +-assoc′ m n p = refl 
+
+-- Commutativity with rewrite
++-identity′ : ∀ (n : ℕ) → n + zero ≡ n
++-identity′ zero = refl
+-- Inductive case: n + zero ≡ n → suc n + zero ≡ suc n
++-identity′ (suc n) rewrite +-identity′ n = refl
+
++-suc′ : ∀ (m n : ℕ) → m + suc n ≡ suc (m + n)
++-suc′ zero n = refl
+-- Inductive case: m + suc n ≡ suc (m + n) → suc m + suc n ≡ suc (suc m + n)
++-suc′ (suc m) n rewrite +-suc′ m n = refl
+
++-comm′ : ∀ (m n : ℕ) → m + n ≡ n + m
++-comm′ m zero rewrite +-identity′ m = refl
+-- the rewrite on the left of the '|' is performed before that on the right.
++-comm′ m (suc n) rewrite +-suc′ m n | +-comm′ m n = refl
+
+-- Exercise: +-swap
++-swap : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap m n p rewrite sym (+-assoc m n p) 
+  | +-comm m n 
+  | +-assoc n m p = refl
+
+-- Exercise: *-distrib-+
+*-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distrib-+ zero n p = refl
+*-distrib-+ (suc m) n p rewrite *-distrib-+ m n p 
+  | sym (+-assoc p (m * p) (n * p)) = refl
+
+-- Exercise *-assoc
+*-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc zero n p = refl
+*-assoc (suc m) n p rewrite *-distrib-+ n (m * n) p 
+  | *-assoc m n p = refl
+
+-- Exercise *-comm
+*-identityʳ : ∀ (n : ℕ) → n * zero ≡ zero
+*-identityʳ zero = refl
+*-identityʳ (suc n) rewrite *-identityʳ n = refl
+
+*-suc : ∀ (m n : ℕ) → m * (suc n) ≡ m + m * n
+*-suc zero n = refl
+*-suc (suc m) n rewrite *-suc m n 
+  | sym (+-assoc n m (m * n)) 
+  | +-comm n m 
+  | +-assoc m n (m * n) = refl
+
+*-comm : ∀ (m n : ℕ) → m * n ≡ n * m
+*-comm zero n rewrite *-identityʳ n = refl
+*-comm (suc m) n rewrite *-comm m n 
+  | *-suc n m = refl
 
