@@ -8,12 +8,12 @@ data Bin : Set where
   _I : Bin → Bin
 
 inc : Bin → Bin
-inc ⟨⟩ = ⟨⟩ I
+inc ⟨⟩    = ⟨⟩ I
 inc (b O) = b I
 inc (b I) = (inc b) O
 
 to : ℕ → Bin
-to zero   = ⟨⟩ O
+to zero     = ⟨⟩ O
 to (suc n)  = inc (to n)
 
 from : Bin → ℕ

@@ -298,7 +298,8 @@ zero-monus-n (suc n)  = refl
 -- Exercise: ∸-|-assoc
 ∸-|-assoc : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
 -- Base case: m = 0
-∸-|-assoc zero n p rewrite zero-monus-n n
+∸-|-assoc zero n p 
+  rewrite zero-monus-n n
   | zero-monus-n p 
   | zero-monus-n (n + p) = refl
 -- Inductive case: suc m
@@ -315,18 +316,21 @@ zero-monus-n (suc n)  = refl
   (m ^ n) ^ p ≡ m ^ (n * p)        (^-*-assoc)
 -}
 ^-distribˡ-|-* : ∀ (m n p : ℕ) → m ^ (n + p) ≡ (m ^ n) * (m ^ p)
-^-distribˡ-|-* m zero p rewrite +-identityʳ (m ^ p) = refl
-^-distribˡ-|-* m (suc n) p rewrite ^-distribˡ-|-* m n p
+^-distribˡ-|-* m zero p 
+  rewrite +-identityʳ (m ^ p) = refl
+^-distribˡ-|-* m (suc n) p 
+  rewrite ^-distribˡ-|-* m n p
   | sym (*-assoc m (m ^ n) (m ^ p)) = refl
 
 ^-distribʳ-* : ∀ (m n p : ℕ) → (m * n) ^ p ≡ (m ^ p) * (n ^ p)
 ^-distribʳ-* m n zero = refl
-^-distribʳ-* m n (suc p) rewrite ^-distribʳ-* m n p 
+^-distribʳ-* m n (suc p) 
+  rewrite ^-distribʳ-* m n p 
   | *-assoc m n ((m ^ p) * (n ^ p))
   | sym (*-assoc n (m ^ p) (n ^ p))
   | *-comm n (m ^ p)
   | *-assoc (m ^ p) n (n ^ p) 
-  | sym (*-assoc m (m ^ p) (n * (n ^ p)))= refl
+  | sym (*-assoc m (m ^ p) (n * (n ^ p))) = refl
 
 {-
   Exercise: Bin-laws
@@ -342,6 +346,31 @@ zero-monus-n (suc n)  = refl
     to (from b) ≡ b
     from (to n) ≡ n
 -}
-open import part1.Bin using (Bin; inc; to; from)
+open import part1.Bin using (Bin; ⟨⟩; _O; _I; inc; to; from)
 
+inc-suc-from : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+inc-suc-from ⟨⟩ = refl
+inc-suc-from (b O) = refl
+inc-suc-from (b I) 
+  rewrite inc-suc-from b  
+  | +-suc (from b) (from b + 0) = refl
 
+{-
+  to (from b) ≡ b
+
+  Counter example:
+
+  b = <> O O O I
+  to (from b) = <> I
+-}
+_ : to (from (⟨⟩ O O O O I)) ≡ ⟨⟩ I
+_ = refl
+
+from-to-inv : ∀ (n : ℕ) → from (to n) ≡ n
+from-to-inv zero = refl
+from-to-inv (suc n) 
+  rewrite inc-suc-from (to n) 
+  | from-to-inv n = refl
+
+-- Standard Library
+-- import Data.Nat.Properties using (+-assoc; +-identityʳ; +-suc; +-comm)
