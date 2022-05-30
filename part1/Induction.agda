@@ -3,7 +3,7 @@ module part1.Induction where
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong; sym)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 
 {-
   Proof by induction for associtivity of addition for natural numbers.
@@ -58,7 +58,7 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 
       suc ((m + n) + p) ≡ suc (m + (n + p))
 
-    Here, the inductive hypothesis is not being assumed, but rather it's being by a
+    Here, the inductive hypothesis is not being assumed, but rather, it's being proved by a
     recursive invocation of the function that we are defining: +-assoc m n p -
     Correspondence between proof by induction and definition by recursion
   -}
@@ -267,13 +267,13 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 *-distrib-+ (suc m) n p rewrite *-distrib-+ m n p 
   | sym (+-assoc p (m * p) (n * p)) = refl
 
--- Exercise *-assoc
+-- Exercise: *-assoc
 *-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
 *-assoc zero n p = refl
 *-assoc (suc m) n p rewrite *-distrib-+ n (m * n) p 
   | *-assoc m n p = refl
 
--- Exercise *-comm
+-- Exercise: *-comm
 *-identityʳ : ∀ (n : ℕ) → n * zero ≡ zero
 *-identityʳ zero = refl
 *-identityʳ (suc n) rewrite *-identityʳ n = refl
@@ -289,4 +289,59 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 *-comm zero n rewrite *-identityʳ n = refl
 *-comm (suc m) n rewrite *-comm m n 
   | *-suc n m = refl
+
+-- Exercise: 0∸n≡0
+zero-monus-n : ∀ (n : ℕ) → zero ∸ n ≡ zero
+zero-monus-n zero     = refl
+zero-monus-n (suc n)  = refl
+
+-- Exercise: ∸-|-assoc
+∸-|-assoc : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+-- Base case: m = 0
+∸-|-assoc zero n p rewrite zero-monus-n n
+  | zero-monus-n p 
+  | zero-monus-n (n + p) = refl
+-- Inductive case: suc m
+-- Case n = 0
+∸-|-assoc (suc m) zero p = refl
+-- Case suc n
+∸-|-assoc (suc m) (suc n) p rewrite ∸-|-assoc m n p = refl
+
+{-
+  Exercise: +*^
+
+  m ^ (n + p) ≡ (m ^ n) * (m ^ p)  (^-distribˡ-|-*)
+  (m * n) ^ p ≡ (m ^ p) * (n ^ p)  (^-distribʳ-*)
+  (m ^ n) ^ p ≡ m ^ (n * p)        (^-*-assoc)
+-}
+^-distribˡ-|-* : ∀ (m n p : ℕ) → m ^ (n + p) ≡ (m ^ n) * (m ^ p)
+^-distribˡ-|-* m zero p rewrite +-identityʳ (m ^ p) = refl
+^-distribˡ-|-* m (suc n) p rewrite ^-distribˡ-|-* m n p
+  | sym (*-assoc m (m ^ n) (m ^ p)) = refl
+
+^-distribʳ-* : ∀ (m n p : ℕ) → (m * n) ^ p ≡ (m ^ p) * (n ^ p)
+^-distribʳ-* m n zero = refl
+^-distribʳ-* m n (suc p) rewrite ^-distribʳ-* m n p 
+  | *-assoc m n ((m ^ p) * (n ^ p))
+  | sym (*-assoc n (m ^ p) (n ^ p))
+  | *-comm n (m ^ p)
+  | *-assoc (m ^ p) n (n ^ p) 
+  | sym (*-assoc m (m ^ p) (n * (n ^ p)))= refl
+
+{-
+  Exercise: Bin-laws
+  Using the functions:
+
+    inc   : Bin → Bin
+    to    : ℕ → Bin
+    from  : Bin → ℕ
+
+  Prove, or give a counter example to the following laws:
+
+    from (inc b) ≡ suc (from b)
+    to (from b) ≡ b
+    from (to n) ≡ n
+-}
+open import part1.Bin using (Bin; inc; to; from)
+
 
