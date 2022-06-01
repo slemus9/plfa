@@ -2,8 +2,8 @@ module part1.Relations where
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong)
-open import Data.Nat using (ℕ; zero; suc; _+_)
-open import Data.Nat.Properties using (+-comm; +-identityʳ)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
+open import Data.Nat.Properties using (+-comm; +-identityʳ; *-comm)
 
 {-
   Less than or equal. Inference rules:
@@ -166,3 +166,163 @@ inv-z≤n z≤n = refl
 -}
 ≤-antisym (s≤s m≤n) (s≤s n≤m) = cong suc (≤-antisym m≤n n≤m)
 
+{-
+  Total:
+
+  for any naturals m and n either m ≤ n or n ≤ m, or both if m and n are equal.
+-}
+data Total (m n : ℕ) : Set where
+
+  forward :
+      m ≤ n
+      ---------
+    → Total m n
+
+  flipped :
+      n ≤ m
+      ---------
+    → Total m n
+
+≤-total : ∀ (m n : ℕ) → Total m n 
+≤-total zero n = forward z≤n
+≤-total (suc m) zero = flipped z≤n
+-- The with clause allows pattern matching for ≤-total m n
+≤-total (suc m) (suc n) 
+    with ≤-total m n 
+... | forward m≤n = forward (s≤s m≤n)
+... | flipped n≤m = flipped (s≤s n≤m)
+
+≤-total′ : ∀ (m n : ℕ) → Total m n
+≤-total′ zero    n        =  forward z≤n
+≤-total′ (suc m) zero     =  flipped z≤n
+≤-total′ (suc m) (suc n)  =  helper (≤-total′ m n)
+  where
+  helper : Total m n → Total (suc m) (suc n)
+  helper (forward m≤n)  =  forward (s≤s m≤n)
+  helper (flipped n≤m)  =  flipped (s≤s n≤m)
+
+-- Monotonicity
+
+{-
+  Addition is monotonic with regard to inequality:
+  ∀ {m n p q : ℕ} → m ≤ n → p ≤ q → m + p ≤ n + q
+-}
++-monoʳ-≤ : ∀ (n p q : ℕ)
+  → p ≤ q
+    -------------
+  → n + p ≤ n + q
++-monoʳ-≤ zero p q p≤q = p≤q
++-monoʳ-≤ (suc n) p q p≤q = s≤s (+-monoʳ-≤ n p q p≤q)
+
++-monoˡ-≤ : ∀ (m n p : ℕ)
+  → m ≤ n
+    -------------
+  → m + p ≤ n + p
++-monoˡ-≤ m n p m≤n 
+  rewrite (+-comm m p ) 
+  | +-comm n p = +-monoʳ-≤ p m n m≤n
+
++-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+    -------------
+  → m + p ≤ n + q
++-mono-≤ m n p q m≤n p≤q  =  ≤-trans (+-monoˡ-≤ m n p m≤n) (+-monoʳ-≤ n p q p≤q)
+
+{-
+  Exercise *-mono-≤:
+
+  Show that multiplication is monotonic with regard to inequality.
+-}
+*-monoʳ-≤ : ∀ (n p q : ℕ) 
+  → p ≤ q 
+    -------------
+  → n * p ≤ n * q
+*-monoʳ-≤ zero _ _ _ = z≤n
+*-monoʳ-≤ (suc n) p q p≤n = +-mono-≤ p q (n * p) (n * q) p≤n np≤nq
+  where
+    np≤nq = *-monoʳ-≤ n p q p≤n
+
+*-monoˡ-≤ : ∀ (m n p : ℕ)
+  → m ≤ n
+    -------------
+  → m * p ≤ n * p
+*-monoˡ-≤ m n p m≤n 
+  rewrite *-comm m p 
+  | *-comm n p = *-monoʳ-≤ p m n m≤n
+
+*-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+    -------------
+  → m * p ≤ n * q
+*-mono-≤ m n p q m≤n p≤q = ≤-trans (*-monoˡ-≤ m n p m≤n) (*-monoʳ-≤ n p q p≤q)
+
+
+infix 4 _<_
+
+{-
+  Strict inequality 
+  
+  It is irreflexive. n < n never holds for any value n.
+
+  It is not total, but satisfies the property of Trichotomy.
+  For any m and n, exactly one of the following hold: m < n, m ≡ n or m > n
+
+  It is monotonic with regards to addition and multiplication
+-}
+data _<_ : ℕ → ℕ → Set where
+
+  z<s : ∀ {n : ℕ}
+      ------------
+    → zero < suc n
+
+  s<s : ∀ {m n : ℕ}
+    → m < n
+      -------------
+    → suc m < suc n
+
+-- Exercise: <-trans
+<-trans : ∀ {m n p : ℕ}
+  → m < n
+  → n < p
+    -----
+  → m < p
+<-trans z<s (s<s _) = z<s
+<-trans (s<s m<n) (s<s n<p) = s<s (<-trans m<n n<p)
+
+{-
+  Exercise: trichotomy
+  Show that strict inequality satisfies a weak version of trichotomy, in the sense that for any 
+  m and n that one of the following holds: m < n, m ≡ n, or m > n.
+
+  Define m > n to be the same as n < m
+-}
+data WeakTrichotomy (m n : ℕ): Set where
+
+  forward :
+      m < n
+      ------------------
+    → WeakTrichotomy m n
+
+  equiv :
+      m ≡ n
+      ------------------
+    → WeakTrichotomy m n
+  
+  flipped :
+      n < m
+      ------------------
+    → WeakTrichotomy m n
+
+<-weakTrich : ∀ (m n : ℕ) → WeakTrichotomy m n
+<-weakTrich zero zero = equiv refl
+<-weakTrich zero (suc n) = forward z<s
+<-weakTrich (suc m) zero = flipped z<s
+<-weakTrich (suc m) (suc n) 
+    with <-weakTrich m n 
+... | forward m<n = forward (s<s m<n)
+... | equiv   m≡n = equiv (cong suc m≡n)
+... | flipped n<m = flipped (s<s n<m)
+
+-- Exercise: +-mono-<

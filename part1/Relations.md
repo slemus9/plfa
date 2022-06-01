@@ -16,9 +16,9 @@ These are some combinations of the previous properties:
 
 # Properties of ordering relations
 
-# Exercises
-
 The relation `≤` is a **Total Order** relation.
+
+# Exercises
 
 ## Exercise: ordering
 
