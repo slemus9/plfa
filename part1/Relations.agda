@@ -326,3 +326,62 @@ data WeakTrichotomy (m n : ℕ): Set where
 ... | flipped n<m = flipped (s<s n<m)
 
 -- Exercise: +-mono-<
++-monoʳ-< : ∀ (n p q : ℕ)
+  → p < q
+    -------------
+  → n + p < n + q
++-monoʳ-< zero p q p<q = p<q
++-monoʳ-< (suc n) p q p<q = s<s (+-monoʳ-< n p q p<q)
+
++-monoˡ-< : ∀ (m n p : ℕ)
+  → m < n
+    -------------
+  → m + p < n + p
++-monoˡ-< m n p m<n 
+  rewrite +-comm m p 
+  | +-comm n p = +-monoʳ-< p m n m<n
+
++-mono-< : ∀ (m n p q : ℕ)
+  → m < n
+  → p < q
+    -------------
+  → m + p < n + q
++-mono-< m n p q m<n p<q = <-trans (+-monoˡ-< m n p m<n) (+-monoʳ-< n p q p<q)
+
+-- Exercise: ≤-iff-<
+≤-iffˡ-< : ∀ {m n : ℕ}
+  → suc m ≤ n
+    -----
+  → m < n
+≤-iffˡ-< {zero} {suc n} _ = z<s
+≤-iffˡ-< {suc m} {suc n} (s≤s m≤n) = s<s (≤-iffˡ-< m≤n)
+
+
+≤-iffʳ-< : ∀ {m n : ℕ}
+  → m < n
+    ---------
+  → suc m ≤ n
+≤-iffʳ-< {zero} {suc n} _ = s≤s z≤n
+≤-iffʳ-< {suc m} {suc n} (s<s m<n) = s≤s (≤-iffʳ-< m<n)
+
+{-
+  Exercise: <-trans-revisited
+
+  suc m ≤ n 
+  suc n ≤ p
+  n ≤ suc n 
+-}
+n≤sucn : ∀ {n : ℕ} → n ≤ suc n
+n≤sucn {n} = +-monoˡ-≤ 0 1 n z≤n
+
+<-trans-revisited : ∀ {m n p : ℕ}
+  → m < n 
+  → n < p
+    -----
+  → m < p
+<-trans-revisited m<n n<p = ≤-iffˡ-< sucm≤p
+  where
+    sucm≤n  = ≤-iffʳ-< m<n
+    sucn≤p  = ≤-iffʳ-< n<p
+    n≤p     = ≤-trans n≤sucn sucn≤p
+    sucm≤p  = ≤-trans sucm≤n n≤p
