@@ -385,3 +385,116 @@ n≤sucn {n} = +-monoˡ-≤ 0 1 n z≤n
     sucn≤p  = ≤-iffʳ-< n<p
     n≤p     = ≤-trans n≤sucn sucn≤p
     sucm≤p  = ≤-trans sucm≤n n≤p
+
+-- Even and Odd
+data even : ℕ → Set
+data odd  : ℕ → Set
+
+{-
+  Even and Odd are mutually recursive.
+  
+  Even is zero, or the successor of an odd number
+  Odd is the successor of an even number
+-}
+data even where
+
+  zero :
+    ---------
+    even zero
+
+  suc  : ∀ {n : ℕ}
+    → odd n
+      ------------
+    → even (suc n)
+
+data odd where
+
+  suc  : ∀ {n : ℕ}
+    → even n
+      -----------
+    → odd (suc n)
+
+e+e≡e : ∀ {m n : ℕ}
+  → even m
+  → even n
+    ------------
+  → even (m + n)
+
+o+e≡o : ∀ {m n : ℕ}
+  → odd m
+  → even n
+    -----------
+  → odd (m + n)
+
+e+e≡e zero nIsEven = nIsEven
+e+e≡e (suc mIsOdd) nIsEven = suc (o+e≡o mIsOdd nIsEven)   
+
+o+e≡o (suc mIsEven) nIsEven = suc (e+e≡e mIsEven nIsEven)
+
+-- Exercise: o+o≡e
+o+o≡e : ∀ {m n : ℕ}
+  → odd m
+  → odd n
+    ------------
+  → even (m + n)
+
+e+o≡o : ∀ {m n : ℕ}
+  → even m
+  → odd n
+    -----------
+  → odd (m + n)
+
+e+o≡o zero nIsOdd = nIsOdd
+e+o≡o (suc mIsOdd) nIsOdd = suc (o+o≡e mIsOdd nIsOdd)
+
+
+o+o≡e (suc mIsEven) nIsOdd = suc (e+o≡o mIsEven nIsOdd)
+
+-- Exercise: Bin-predicates
+open import part1.Bin using (Bin; ⟨⟩; _O; _I; inc; to; from)
+
+data Can : Bin → Set
+data One : Bin → Set
+
+-- Is cannonical (no leading 0s)
+data Can where
+
+  zero : 
+    Can (⟨⟩ O)
+
+  -- If b has a leading one, b is cannonical
+  can : ∀ {b : Bin}
+    → One b
+      -----------
+    → Can b 
+
+-- b has a leading one
+data One where
+
+  -- If b is cannonical, inc b has a leading one
+  suc : ∀ {b : Bin}
+    → Can b
+      -----------
+    → One (inc b)
+
+{-
+  Show that inc preserves canonical bitstrings
+
+  Can b
+  ------------
+  Can (inc b)
+-}
+inc-one : ∀ {b : Bin}
+  → One b
+    -----------
+  → One (inc b)
+
+inc-can : ∀ {b : Bin}
+  → Can b
+    -----------
+  → Can (inc b)
+
+inc-one (suc bCan) = suc (inc-can bCan)
+
+inc-can zero = can (suc zero)
+inc-can (can bOne) = can (inc-one bOne)
