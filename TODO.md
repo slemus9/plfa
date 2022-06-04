@@ -7,3 +7,11 @@
 ## Relations 
 
 - ordering
+- Bin-predicated
+  - Show that converting a canonical bitstring to a natural and back is the identity
+    
+    ```
+    Can b
+    ---------------
+    to (from b) ≡ b
+    ```

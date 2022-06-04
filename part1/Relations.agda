@@ -512,3 +512,38 @@ inc-one (append1 bOne)  = append0 (inc-one bOne)
 
 inc-can zero        = can one
 inc-can (can bOne)  = can (inc-one bOne)
+
+{-
+  Show that converting a natural to a bitstring always yields a canonical bitstring
+
+  ----------
+  Can (to n)
+-}
+to-can : ∀ {n : ℕ}
+    ----------
+  → Can (to n)
+to-can {zero}   = zero
+to-can {suc n}  = inc-can (to-can {n})
+
+{-
+  Show that converting a canonical bitstring to a natural and back is the identity
+
+  Can b
+  ---------------
+  to (from b) ≡ b
+
+  TODO
+-}
+to-from-identity-can : ∀ {b : Bin}
+  → Can b
+    ---------------
+  → to (from b) ≡ b
+to-from-identity-can bCan = ?
+
+{-
+  Standard Library
+
+  import Data.Nat using (_≤_; z≤n; s≤s)
+  import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-antisym; ≤-total;
+                                    +-monoʳ-≤; +-monoˡ-≤; +-mono-≤)
+-}
