@@ -460,6 +460,7 @@ data One : Bin → Set
 data Can where
 
   zero : 
+    ----------
     Can (⟨⟩ O)
 
   -- If b has a leading one, b is cannonical
@@ -471,11 +472,22 @@ data Can where
 -- b has a leading one
 data One where
 
-  -- If b is cannonical, inc b has a leading one
-  suc : ∀ {b : Bin}
-    → Can b
-      -----------
-    → One (inc b)
+  -- 1 has a leading 1
+  one :
+    ----------
+    One (⟨⟩ I)
+
+  -- if b has a leading 1, b0 has a leading 1
+  append0 : ∀ {b : Bin}
+    → One b
+      ---------
+    → One (b O)
+
+  -- if b has a leading 1, b1 has a leading 1
+  append1 : ∀ {b : Bin}
+    → One b
+      ---------
+    → One (b I)
 
 {-
   Show that inc preserves canonical bitstrings
@@ -494,7 +506,9 @@ inc-can : ∀ {b : Bin}
     -----------
   → Can (inc b)
 
-inc-one (suc bCan) = suc (inc-can bCan)
+inc-one one             = append0 one
+inc-one (append0 bOne)  = append1 bOne
+inc-one (append1 bOne)  = append0 (inc-one bOne)
 
-inc-can zero = can (suc zero)
-inc-can (can bOne) = can (inc-one bOne)
+inc-can zero        = can one
+inc-can (can bOne)  = can (inc-one bOne)
