@@ -534,11 +534,7 @@ to-can {suc n}  = inc-can (to-can {n})
 
   TODO
 -}
-to-from-identity-can : ∀ {b : Bin}
-  → Can b
-    ---------------
-  → to (from b) ≡ b
-to-from-identity-can bCan = ?
+
 
 {-
   Standard Library

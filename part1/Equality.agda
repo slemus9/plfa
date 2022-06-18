@@ -115,3 +115,160 @@ trans′ {A} {x} {y} {z} x≡y y≡z =
   ≡⟨ y≡z ⟩
     z
   ∎
+
+-- Chains of equations
+data ℕ : Set where
+  zero : ℕ
+  suc  : ℕ → ℕ
+
+_+_ : ℕ → ℕ → ℕ
+zero    + n  =  n
+(suc m) + n  =  suc (m + n)
+
+postulate
+  +-identity : ∀ (m : ℕ) → m + zero ≡ m
+  +-suc : ∀ (m n : ℕ) → m + suc n ≡ suc (m + n)
+
++-comm : ∀ (m n : ℕ) → m + n ≡ n + m
++-comm m zero =
+  begin
+    m + zero
+  ≡⟨ +-identity m ⟩
+    m
+  ≡⟨⟩
+    zero + m
+  ∎ 
++-comm m (suc n) =
+  begin
+    m + suc n
+  ≡⟨ +-suc m n ⟩
+    suc (m + n)  
+  ≡⟨ cong suc (+-comm m n) ⟩
+    suc (n + m)
+  ≡⟨⟩
+    suc n + m
+  ∎ 
+
+-- Exercise ≤-Reasoning
+
+data _≤_ : ℕ → ℕ → Set where
+
+  z≤n : ∀ {n : ℕ}
+    ----------
+    → zero ≤ n
+
+  s≤s : ∀ {m n : ℕ}
+    → m ≤ n
+    ----------
+    → suc m ≤ suc n
+
+infix 4 _≤_
+
+≤-trans : ∀ {m n p : ℕ}
+  → m ≤ n
+  → n ≤ p
+    -----
+  → m ≤ p
+≤-trans z≤n _               = z≤n
+≤-trans (s≤s m≤n) (s≤s n≤p) = s≤s (≤-trans m≤n n≤p)
+
+≤-refl : ∀ {n : ℕ}
+    -----
+  → n ≤ n
+≤-refl {zero}   = z≤n
+≤-refl {suc n}  = s≤s ≤-refl
+
+≤-refl-≡ : ∀ {m n : ℕ}
+  → m ≡ n
+    -----
+  → m ≤ n
+≤-refl-≡ refl = ≤-refl
+
+
+module ≤-Reasoning where
+
+  infix  1 ≤-begin_
+  infixr 2 _≤⟨⟩_ _≤⟨_⟩_
+  infix  3 _≤∎
+
+  ≤-begin_ : ∀ {x y : ℕ}
+    → x ≤ y
+      -----
+    → x ≤ y
+  ≤-begin_ x≤y = x≤y
+
+  _≤⟨⟩_ : ∀ (x : ℕ) {y : ℕ}
+    → x ≤ y
+      -----
+    → x ≤ y
+  x ≤⟨⟩ x≤y = x≤y
+
+  _≤⟨_⟩_ : ∀ (x : ℕ) {y z : ℕ}
+    → x ≤ y
+    → y ≤ z
+      -----
+    → x ≤ z
+  x ≤⟨ x≤y ⟩ y≤z = ≤-trans x≤y y≤z
+
+  _≤∎ : ∀ (x : ℕ)
+      -----
+    → x ≤ x
+  x ≤∎ = ≤-refl
+
+open ≤-Reasoning
+
++-monoʳ-≤ : ∀ (n p q : ℕ)
+  → p ≤ q
+    -------------
+  → n + p ≤ n + q
++-monoʳ-≤ zero p q p≤q = 
+  ≤-begin
+    zero + p
+  ≤⟨⟩
+    p
+  ≤⟨ p≤q ⟩
+    q
+  ≤⟨⟩
+    zero + q
+  ≤∎
++-monoʳ-≤ (suc n) p q p≤q =
+  ≤-begin
+    suc n + p
+  ≤⟨⟩
+    suc (n + p)
+  ≤⟨ s≤s (+-monoʳ-≤ n p q p≤q) ⟩
+    suc (n + q)
+  ≤⟨⟩
+    suc n + q
+  ≤∎
+
++-monoˡ-≤ : ∀ (m n p : ℕ)
+  → m ≤ n
+    -------------
+  → m + p ≤ n + p
++-monoˡ-≤ m n p m≤n =
+  ≤-begin
+    m + p
+  ≤⟨ ≤-refl-≡ (+-comm m p) ⟩
+    p + m
+  ≤⟨ +-monoʳ-≤ p m n m≤n ⟩
+    p + n
+  ≤⟨ ≤-refl-≡ (+-comm p n) ⟩
+    n + p
+  ≤∎
+
++-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+    -------------
+  → m + p ≤ n + q
++-mono-≤ m n p q m≤n p≤q = 
+  ≤-begin
+    m + p
+  ≤⟨ +-monoʳ-≤ m p q p≤q ⟩
+    m + q
+  ≤⟨ +-monoˡ-≤ m n q m≤n ⟩
+    n + q
+  ≤∎
+
+-- Rewriting
