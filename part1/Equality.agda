@@ -390,3 +390,39 @@ sym-≐ {A} {x} {y} x≐y P = Qy
 
     Qy : Q y
     Qy = x≐y Q Qx
+
+{-
+  Universe Polymorphism
+
+  Every type belongs in the hierarchy Set₀, Set₁, Set₂, ...
+  Where Set₀ : Set₁, Set₁ : Set₂, ...
+
+  We would like to compare values that belong to Set ℓ for some
+  arbitrary ℓ
+
+  From Agda's documentation: a type whose elements are types is called a universe
+
+  https://agda.readthedocs.io/en/v2.6.1/language/universe-levels.html
+-}
+open import Level using (Level; _⊔_) renaming (zero to lzero; suc to lsuc)
+
+data _≡′_ {ℓ : Level} {A : Set ℓ} (x : A) : A → Set ℓ where
+  refl′ : x ≡′ x
+
+sym′ : ∀ {ℓ : Level} {A : Set ℓ} {x y : A}
+  → x ≡′ y
+    ------
+  → y ≡′ x
+sym′ refl′ = refl′
+
+_≐′_ : ∀ {ℓ : Level} {A : Set ℓ} (x y : A) → Set (lsuc ℓ)
+_≐′_ {ℓ} {A} x y = ∀ (P : A → Set ℓ) → P x → P y
+
+_∘_ : ∀ {ℓ₁ ℓ₂ ℓ₃ : Level} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃}
+  → (B → C) → (A → B) → A → C
+(g ∘ f) x  =  g (f x)
+
+-- Standard Library
+-- import Relation.Binary.PropositionalEquality as Eq
+-- open Eq using (_≡_; refl; trans; sym; cong; cong-app; subst)
+-- open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
