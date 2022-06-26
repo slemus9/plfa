@@ -272,3 +272,121 @@ open ≤-Reasoning
   ≤∎
 
 -- Rewriting
+data even : ℕ → Set
+data odd  : ℕ → Set
+
+data even where
+
+  even-zero : even zero
+
+  even-suc : ∀ {n : ℕ}
+    → odd n
+      ------------
+    → even (suc n)
+
+data odd where
+  odd-suc : ∀ {n : ℕ}
+    → even n
+      -----------
+    → odd (suc n)
+
+{-# BUILTIN EQUALITY _≡_ #-}
+
+even-comm : ∀ (m n : ℕ)
+  → even (m + n)
+    ------------
+  → even (n + m)
+even-comm m n ev 
+  rewrite +-comm m n = ev
+
++-comm′ : ∀ (m n : ℕ) → m + n ≡ n + m
++-comm′ zero    n  rewrite +-identity n             =  refl
++-comm′ (suc m) n  rewrite +-suc n m | +-comm′ m n  =  refl
+
+-- Leibniz Equality
+_≐_ : ∀ {A : Set} (x y : A) → Set₁
+_≐_ {A} x y = ∀ (P : A → Set) → P x → P y
+
+{-
+  Might be helpful to think of the type signature as
+    refl-≐ : ∀ {A : Set} {x : A}
+      → ∀ (P : A → Set) → P x → P x
+-}
+refl-≐ : ∀ {A : Set} {x : A}
+  → x ≐ x
+refl-≐ P Px = Px
+
+{-
+  trans-≐ : ∀ {A : Set} {x y z : A}
+    → x ≐ y
+    → y ≐ z
+      -----
+    → ∀ (P : A → Set) → P x → P z
+-}
+trans-≐ : ∀ {A : Set} {x y z : A}
+  → x ≐ y
+  → y ≐ z
+    -----
+  → x ≐ z
+trans-≐ x≐y y≐z P Px = y≐z P (x≐y P Px)
+
+{-
+  sym-≐ : ∀ {A : Set} {x y : A}
+    → x ≐ y
+      -----
+    → ∀ (P : A → Set) → P x → P y
+-}
+sym-≐ : ∀ {A : Set} {x y : A}
+  → x ≐ y
+    -----
+  → y ≐ x
+sym-≐ {A} {x} {y} x≐y P = Qy
+  where
+    Q : A → Set
+    Q z = P z → P x
+
+    -- Qx : P x → P x
+    Qx : Q x
+    Qx = refl-≐ P
+
+    {-    
+      x≐y : ∀ (P : A → Set) → P x → P y
+      x≐y Q : Q x → Q y
+      x≐y Q Qx : Q y
+      x≐y Q Qx : P y → P x
+    -}
+    Qy : Q y
+    Qy = x≐y Q Qx
+
+{-
+  ≡-implies-≐ : ∀ {A : Set} {x y : A}
+    → x ≡ y
+      -----
+    → ∀ (P : A → Set) → P x → P y
+-}
+≡-implies-≐ : ∀ {A : Set} {x y : A}
+  → x ≡ y
+    -----
+  → x ≐ y
+≡-implies-≐ x≡y P = subs P x≡y
+
+{-
+  ≐-implies-≡ : ∀ {A : Set} {x y : A}
+    → ∀ (P : A → Set) → P x → P y
+      -----
+    → x ≡ y
+-}
+≐-implies-≡ : ∀ {A : Set} {x y : A}
+  → x ≐ y
+    -----
+  → x ≡ y
+≐-implies-≡ {A} {x} {y} x≐y = Qy
+  where
+    Q : A → Set
+    Q z = x ≡ z
+
+    Qx : Q x
+    Qx = refl
+
+    Qy : Q y
+    Qy = x≐y Q Qx
