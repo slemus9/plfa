@@ -14,4 +14,7 @@
     Can b
     ---------------
     to (from b) ≡ b
-    ```
+
+## Isomorphism
+
+- Bin-embedding
