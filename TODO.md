@@ -2,12 +2,12 @@
 
 ## Induction 
 
-- finite-|-assoc
+- [ ] finite-|-assoc
 
 ## Relations 
 
-- ordering
-- Bin-predicated
+- [ ] ordering
+- [ ] Bin-predicated
   - Show that converting a canonical bitstring to a natural and back is the identity
     
     ```
@@ -17,4 +17,4 @@
 
 ## Isomorphism
 
-- Bin-embedding
+- [ ] Bin-embedding
