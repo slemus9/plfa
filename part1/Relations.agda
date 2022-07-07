@@ -536,13 +536,6 @@ to-can {suc n}  = inc-can (to-can {n})
 -}
 open import part1.Bin using (Bin; ⟨⟩; _I; _O; to; from)
 
-
-to_2from_b : ∀ {b : Bin}
-  → 1 ≤ from b
-  → to (2 * from b) ≡ (to (from b)) O
-to_2from_b {b O} 1≤2from_b = {!   !}
-to_2from_b {b I} 1≤from_b = {!   !}
-
 {-
   Standard Library
 
