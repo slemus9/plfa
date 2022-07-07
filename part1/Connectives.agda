@@ -335,8 +335,247 @@ uniq-⊎ h (inj₂ y) = refl
 {-
   False is empty
 
-  False never holds
+  False never holds. it does not have any members (is empty)
 -}
 data ⊥ : Set where
   -- no clauses!
-  
+  -- there is no possible evidence that ⊥ holds
+  -- there is no introduction rule, but there is elimination rule
+
+{-
+  Given evidence that ⊥ holds (which is none), we might conclude anything! 
+
+  absurd pattern: () 
+  we indicate that it is never possible to match against a value of this type by using the pattern ()
+
+  For numbers, zero is the identity of addition. Similarly, empty is the identity of sums up
+  to isomorphism
+-}
+⊥-elim : ∀ {A : Set}
+  → ⊥
+    --
+  → A
+⊥-elim ()
+
+uniq-⊥ : ∀ {C : Set} (h : ⊥ → C) (w : ⊥) → ⊥-elim w ≡ h w
+uniq-⊥ h ()
+
+⊥-count : ⊥ → ℕ
+⊥-count ()
+
+{-
+  Exercise ⊥-identityˡ
+
+  Show empty is the left identity of sums up to isomorphism
+-}
+⊥-identityˡ : ∀ {A : Set}
+  → ⊥ ⊎ A ≃ A
+⊥-identityˡ = record
+  { to = λ
+    { (inj₁ ())
+    ; (inj₂ a) → a 
+    }
+  ; from = inj₂
+  ; from∘to = λ
+    { (inj₁ ())
+    ; (inj₂ a) → refl
+    }
+  ; to∘from = λ _ → refl
+  }
+
+{-
+  Exercise ⊥-identityʳ
+
+  Show empty is the right identity of sums up to isomorphism
+-}
+⊥-identityʳ : ∀ {A : Set}
+  → A ⊎ ⊥ ≃ A
+⊥-identityʳ {A} = 
+  ≃-begin
+    (A ⊎ ⊥)
+  ≃⟨ ⊎-comm ⟩
+    (⊥ ⊎ A)
+  ≃⟨ ⊥-identityˡ ⟩
+    A
+  ≃-∎
+
+{-
+  Implication is function
+
+  Given two propositions A and B, A → B holds if, whenever A holds, B holds.
+
+  Evidence that A → B holds is of the form: λ (x : A) → N, where N : B.
+
+  A → B is refered to as the function space from A to B. It's also sometimes
+  called the exponential, with B raised to the A power.
+-}
+
+-- Modus Ponens, corresponds to function application
+→-elim : ∀ {A B : Set}
+  → (A → B)
+  → A
+    -------
+  → B
+→-elim f a = f a
+
+-- Elimination followed by introduction is the identity
+η-→ : ∀ {A B : Set} (f : A → B) → (λ (x : A) → f x) ≡ f
+η-→ f = refl
+
+-- 3² members
+→-count : (Bool → Tri) → ℕ
+→-count f with f true | f false
+...          | aa     | aa      =   1
+...          | aa     | bb      =   2
+...          | aa     | cc      =   3
+...          | bb     | aa      =   4
+...          | bb     | bb      =   5
+...          | bb     | cc      =   6
+...          | cc     | aa      =   7
+...          | cc     | bb      =   8
+...          | cc     | cc      =   9
+
+{-
+  Corresponding to the law
+
+    (p ^ n) ^ m  ≡  p ^ (n * m)
+
+  We have the isomorphism
+
+    A → (B → C)  ≃  (A × B) → C
+
+  Given evidence that A and B hold, then we obtain evidence that C holds
+
+  This isomorphism is often called currying
+-}
+currying : ∀ {A B C : Set} → (A → B → C) ≃ (A × B → C)
+currying = record
+  { to = λ f → λ{ ⟨ a , b ⟩ → f a b  }
+  ; from = λ g → λ a → λ b → g ⟨ a , b ⟩
+  ; from∘to = λ f → refl
+  ; to∘from = λ g → extensionality λ{ ⟨ a , b ⟩ → refl }
+  }
+
+{-
+  Corresponding to the law
+
+    p ^ (n + m) = (p ^ n) * (p ^ m)
+
+  We have the isomorphism
+
+    (A ⊎ B) → C  ≃  (A → C) × (B → C)
+-}
+→-distrib-⊎ : ∀ {A B C : Set} 
+  → (A ⊎ B → C) ≃ ((A → C) × (B → C))
+→-distrib-⊎ = record
+  { to = λ f → ⟨ f ∘ inj₁ , f ∘ inj₂ ⟩
+  ; from = λ{ ⟨ g , h ⟩ → case-⊎ g h }
+  ; from∘to = λ f → extensionality λ
+    { (inj₁ a) → refl
+    ; (inj₂ b) → refl
+    }
+  ; to∘from = λ{ ⟨ g , h ⟩ → refl }
+  }
+
+{-
+  Corresponding to the law 
+
+    (p * n) ^ m = (p ^ m) * (n ^ m)
+
+  We have the isomorphism
+
+    A → B × C  ≃  (A → B) × (A → C)
+-}
+→-distrib-× : ∀ {A B C : Set} → (A → B × C) ≃ (A → B) × (A → C)
+→-distrib-× = record
+  { to = λ f → ⟨ proj₁ ∘ f , proj₂ ∘ f ⟩
+  ; from = λ{ ⟨ g , h ⟩ → λ a → ⟨ g a , h a ⟩  }
+  ; from∘to = λ f → extensionality (η-× ∘ f)
+  ; to∘from = λ{ ⟨ g , h ⟩ → refl  }
+  }
+
+{-
+  Distribution
+
+  Products distribute over sum, up to isomorphism
+-}
+×-distrib-⊎ : ∀ {A B C : Set} 
+  → (A ⊎ B) × C ≃ (A × C) ⊎ (B × C)
+×-distrib-⊎ = record
+  { to = λ
+    { ⟨ inj₁ a , c ⟩ → inj₁ ⟨ a , c ⟩ 
+    ; ⟨ inj₂ b , c ⟩ → inj₂ ⟨ b , c ⟩
+    }
+  ; from = λ
+    { (inj₁ ⟨ a , c ⟩) → ⟨ inj₁ a , c ⟩
+    ; (inj₂ ⟨ b , c ⟩) → ⟨ inj₂ b , c ⟩
+    }
+  ; from∘to = λ
+    { ⟨ inj₁ a , c ⟩ → refl 
+    ; ⟨ inj₂ b , c ⟩ → refl
+    }
+  ; to∘from = λ
+    { (inj₁ ⟨ a , c ⟩) → refl
+    ; (inj₂ ⟨ b , c ⟩) → refl
+    }
+  }
+
+-- Sums do not distribute over products up to isomorphism, but it is an embedding
+⊎-distrib-× : ∀ {A B C : Set} → (A × B) ⊎ C ≲ (A ⊎ C) × (B ⊎ C)
+⊎-distrib-× = record
+  { to = λ
+    { (inj₁ ⟨ a , b ⟩) → ⟨ inj₁ a , inj₁ b ⟩ 
+    ; (inj₂ c)         → ⟨ inj₂ c , inj₂ c ⟩ 
+    }
+  ; from = λ
+    { ⟨ inj₁ a , inj₁ b ⟩ → inj₁ ⟨ a , b ⟩ 
+    ; ⟨ _ , inj₂ c ⟩      → inj₂ c
+    ; ⟨ inj₂ c , _ ⟩      → inj₂ c 
+    }
+  ; from∘to = λ
+    { (inj₁ ⟨ a , b ⟩) → refl 
+    ; (inj₂ c)         → refl 
+    }
+  }
+
+{-
+  Exercise ⊎-weak-×
+
+  Weak distributive law. The corresponding distributive law is ×-distrib-⊎:
+
+    (A ⊎ B) × C ≃ (A × C) ⊎ (B × C)
+
+  The difference is that C doesn't get paired with A
+
+    (A ⊎ B) × C → A ⊎ (B × C)
+
+  Without A × C we can not have an isomorphism, since the `from`
+  function can not be defined
+-}
+⊎-weak-× : ∀ {A B C : Set} → (A ⊎ B) × C → A ⊎ (B × C)
+⊎-weak-× ⟨ inj₁ a , c ⟩ = inj₁ a 
+⊎-weak-× ⟨ inj₂ b , c ⟩ = inj₂ ⟨ b , c ⟩
+
+{-
+  Exercise ⊎×-implies-×⊎
+
+  The converse does not hold. For example, if we have 
+
+    ⟨ inj₁ a , inj₂ d ⟩ : (A ⊎ C) × (B ⊎ D)
+
+  We can not make a value of type (A × B) ⊎ (C × D), since we
+  don't have a value of type B or C
+-}
+⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
+⊎×-implies-×⊎ (inj₁ ⟨ a , b ⟩) = ⟨ inj₁ a , inj₁ b ⟩
+⊎×-implies-×⊎ (inj₂ ⟨ c , d ⟩) = ⟨ inj₂ c , inj₂ d ⟩
+
+{-
+  Standard Library
+
+  import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
+  import Data.Unit using (⊤; tt)
+  import Data.Sum using (_⊎_; inj₁; inj₂) renaming ([_,_] to case-⊎)
+  import Data.Empty using (⊥; ⊥-elim)
+  import Function.Equivalence using (_⇔_)
+-}
