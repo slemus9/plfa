@@ -3,8 +3,8 @@ module part1.Negation where
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Product using (_×_)
+-- open import Data.Sum using (_⊎_; inj₁; inj₂)
+-- open import Data.Product using (_×_)
 open import part1.Isomorphism using (_≃_; extensionality)
 
 {-
@@ -161,3 +161,104 @@ data Trichotomy (m n : ℕ) : Set where
 ... | less m<n m≢n ¬n<m    = less (s<s m<n) (≢-suc m≢n) (¬s<s ¬n<m)
 ... | equal m≡n ¬m<n ¬n<m  = equal (cong suc m≡n) (¬s<s ¬m<n) (¬s<s ¬n<m)
 ... | greater n<m m≢n ¬m<n = greater (s<s n<m) (≢-suc m≢n) (¬s<s ¬m<n)
+
+{-
+  Exercise ⊎-dual-×
+
+  ¬ (A ⊎ B) ≃ (¬ A) × (¬ B)
+
+  (Version of De Morgan's Law)
+-}
+open import part1.Connectives using (_⊎_; inj₁; inj₂; _×_; ⟨_,_⟩; →-distrib-⊎)
+open part1.Isomorphism.≃-Reasoning
+
+⊎-dual-× : ∀ {A B : Set}
+  → ¬ (A ⊎ B) ≃ (¬ A) × (¬ B)
+⊎-dual-× {A} {B} = →-distrib-⊎ {A} {B} {⊥}
+
+{-
+  We cannot have ¬ (A × B) ≃ (¬ A) ⊎ (¬ B)
+  since there is no function of type ¬ (A × B) → (¬ A) ⊎ (¬ B),
+  but we can have the converse version
+-}
+x-weak-⊎ : ∀ {A B : Set}
+  → (¬ A) ⊎ (¬ B) → ¬ (A × B) 
+x-weak-⊎ (inj₁ ¬a) ⟨ a , _ ⟩ = ¬a a
+x-weak-⊎ (inj₂ ¬b) ⟨ _ , b ⟩ = ¬b b
+
+{-
+  Excluded middle is irrefutable
+
+  The law of the excluded middle does not hold in intuitionistic logic. However, we can show that it is irrefutable, 
+  meaning that the negation of its negation is provable (and hence that its negation is never provable)
+-}
+postulate
+  em : ∀ {A : Set} → A ⊎ ¬ A
+
+em-irrefutable : ∀ {A : Set} → ¬ ¬ (A ⊎ ¬ A)
+em-irrefutable ¬em = ¬em (inj₂ λ{ a → ¬em (inj₁ a) })
+
+{-
+  Exercise Classical
+-}
+postulate
+  ¬-double-elim : ∀ {A : Set}   → ¬ ¬ A → A
+  pierce-law    : ∀ {A B : Set} → ((A → B) → A) → A
+  →-disjunction : ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
+  de-morgan     : ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
+
+-- Excluded middle implies all others
+em→¬-double-elim : ∀ {A : Set} 
+  → A ⊎ ¬ A
+    -------------------------
+  → ¬ ¬ A → A
+em→¬-double-elim (inj₁ a) ¬¬a  = a
+em→¬-double-elim (inj₂ ¬a) ¬¬a = ⊥-elim (¬¬a ¬a)
+
+em→pierce-law : ∀ {A B : Set}
+  → A ⊎ ¬ A
+    -----------------
+  → ((A → B) → A) → A
+em→pierce-law (inj₁ a) f = a
+em→pierce-law (inj₂ ¬a) f = f λ{a → ⊥-elim (¬a a)}
+
+em→→-disjunction : ∀ {A B : Set}
+  → A ⊎ ¬ A
+    -----------------
+  → (A → B) → ¬ A ⊎ B
+em→→-disjunction (inj₁ a) f  = inj₂ (f a)
+em→→-disjunction (inj₂ ¬a) f = inj₁ ¬a
+
+em→de-morgan : ∀ {A B : Set}
+  → A ⊎ ¬ A
+  → B ⊎ ¬ B
+    ---------------------
+  → ¬ (¬ A × ¬ B) → A ⊎ B
+em→de-morgan (inj₁ a)  _         f = inj₁ a
+em→de-morgan _         (inj₁ b)  f = inj₂ b
+em→de-morgan (inj₂ ¬a) (inj₂ ¬b) f = ⊥-elim (f ⟨ ¬a , ¬b ⟩)
+
+-- Pierce law implies all others
+pierce-law→em :
+    (∀ {A B : Set} → ((A → B) → A) → A)
+    -----------------------------------
+  → ∀ {A : Set} → A ⊎ ¬ A
+pierce-law→em pierce = pierce λ{ ¬em → ⊥-elim (em-irrefutable ¬em) }
+
+pierce-law→¬-double-elim : ∀ {A B : Set}
+  → (∀ {A B : Set} → ((A → B) → A) → A)
+    -----------------------------------
+  → ∀ {A : Set} → ¬ ¬ A → A
+pierce-law→¬-double-elim pierce ¬¬a = pierce λ{ ¬a → ⊥-elim (¬¬a ¬a) }
+
+pierce-law→→-disjunction :
+    (∀ {A B : Set} → ((A → B) → A) → A)
+    -----------------------------------
+  → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
+pierce-law→→-disjunction pierce f = pierce λ{ ¬_¬a⊎b →  inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) } }
+
+-- pierce-law→de-morgan :
+--     (∀ {A B : Set} → ((A → B) → A) → A)
+--     -------------------------------------
+--   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
+-- pierce-law→de-morgan pierce ¬_¬a×¬b = pierce λ{ ¬_a⊎b → {!   !} }
