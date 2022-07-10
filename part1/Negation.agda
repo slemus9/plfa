@@ -258,11 +258,14 @@ em→de-morgan (inj₂ ¬a) (inj₂ ¬b) f = ⊥-elim (f ⟨ ¬a , ¬b ⟩)
 ¬-double-elim→→-disjunction ¬¬-elim f = 
   ¬¬-elim λ{ ¬_¬a⊎b → ¬_¬a⊎b (inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) }) }
 
--- ¬-double-elim→de-morgan : 
---     (∀ {A : Set} → ¬ ¬ A → A)
---     -------------------------------------
---   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
--- ¬-double-elim→de-morgan ¬¬-elim ¬_¬a×¬b = ?
+¬-double-elim→de-morgan : 
+    (∀ {A : Set} → ¬ ¬ A → A)
+    -------------------------------------
+  → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
+¬-double-elim→de-morgan ¬¬-elim ¬_¬a×¬b = ¬¬-elim λ
+  { 
+    ¬_a⊎b → ¬_¬a×¬b ⟨ (λ{ a → ¬_a⊎b (inj₁ a) }) , ((λ{ b → ¬_a⊎b (inj₂ b) })) ⟩ 
+  }
 
 -- Pierce law implies all others
 pierce-law→em :
