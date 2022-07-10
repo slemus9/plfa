@@ -169,7 +169,12 @@ data Trichotomy (m n : ℕ) : Set where
 
   (Version of De Morgan's Law)
 -}
-open import part1.Connectives using (_⊎_; inj₁; inj₂; _×_; ⟨_,_⟩; →-distrib-⊎)
+open import part1.Connectives using 
+  ( _⊎_
+  ; inj₁; inj₂
+  ; _×_; ⟨_,_⟩
+  ; →-distrib-⊎; ⊎-comm; case-⊎
+  )
 open part1.Isomorphism.≃-Reasoning
 
 ⊎-dual-× : ∀ {A B : Set}
@@ -279,7 +284,7 @@ em→de-morgan x⊎¬x f
   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
 ¬-double-elim→de-morgan ¬¬-elim ¬_¬a×¬b = ¬¬-elim λ
   { 
-    ¬_a⊎b → ¬_¬a×¬b ⟨ (λ{ a → ¬_a⊎b (inj₁ a) }) , ((λ{ b → ¬_a⊎b (inj₂ b) })) ⟩ 
+    ¬_a⊎b → ¬_¬a×¬b ⟨ ( λ a → ¬_a⊎b (inj₁ a) ) , ( λ b → ¬_a⊎b (inj₂ b) ) ⟩ 
   }
 
 -- Pierce law implies all others
@@ -310,5 +315,33 @@ pierce-law→de-morgan :
   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
 pierce-law→de-morgan pierce ¬_¬a×¬b = pierce λ
   {
-    ¬_a⊎b → ⊥-elim (¬_¬a×¬b ⟨ (λ{ a → ¬_a⊎b (inj₁ a) }) , ((λ{ b → ¬_a⊎b (inj₂ b) })) ⟩)
+    ¬_a⊎b → ⊥-elim (¬_¬a×¬b ⟨ ( λ a → ¬_a⊎b (inj₁ a) ) , ( λ b → ¬_a⊎b (inj₂ b) ) ⟩)
   }
+
+-- Implication as disjunction implies all others
+→-disjunction→em : 
+    (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
+    -----------------------------------
+  → ∀ {A : Set} → A ⊎ ¬ A
+→-disjunction→em disj = _≃_.to ⊎-comm (disj λ{ a → a })
+
+→-disjunction→¬-double-elim : 
+    (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
+    -----------------------------------
+  → ∀ {A : Set} → ¬ ¬ A → A
+→-disjunction→¬-double-elim disj ¬¬a = case-⊎ 
+  ( λ ¬a → ⊥-elim (¬¬a ¬a) )
+  ( λ a  → a )
+  ( disj λ{ a → a } )
+
+-- →-disjunction→pierce-law : 
+--     (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
+--     -----------------------------------
+--   → ∀ {A B : Set} → ((A → B) → A) → A
+-- →-disjunction→pierce-law disj f = ?
+
+-- →-disjunction→de-morgan : 
+--     (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
+--     -----------------------------------
+--   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
+-- →-disjunction→de-morgan disj = ?
