@@ -208,55 +208,70 @@ postulate
   de-morgan     : ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
 
 -- Excluded middle implies all others
-em→¬-double-elim : ∀ {A : Set} 
-  → A ⊎ ¬ A
+em→¬-double-elim :  
+    (∀ {A : Set} → A ⊎ ¬ A)
     -------------------------
-  → ¬ ¬ A → A
-em→¬-double-elim (inj₁ a) ¬¬a  = a
-em→¬-double-elim (inj₂ ¬a) ¬¬a = ⊥-elim (¬¬a ¬a)
+  → ∀ {A : Set} → ¬ ¬ A → A
+em→¬-double-elim a⊎¬a ¬¬a 
+    with a⊎¬a 
+... | inj₁ a  = a
+... | inj₂ ¬a = ⊥-elim (¬¬a ¬a)
 
-em→pierce-law : ∀ {A B : Set}
-  → A ⊎ ¬ A
+em→pierce-law : 
+    (∀ {A : Set} → A ⊎ ¬ A)
     -----------------
-  → ((A → B) → A) → A
-em→pierce-law (inj₁ a) f = a
-em→pierce-law (inj₂ ¬a) f = f λ{a → ⊥-elim (¬a a)}
+  → ∀ {A B : Set} → ((A → B) → A) → A
+em→pierce-law a⊎¬a f 
+    with a⊎¬a
+... | inj₁ a  = a
+... | inj₂ ¬a = f λ{a → ⊥-elim (¬a a)}
 
-em→→-disjunction : ∀ {A B : Set}
-  → A ⊎ ¬ A
+em→→-disjunction :
+    (∀ {A : Set} → A ⊎ ¬ A)
     -----------------
-  → (A → B) → ¬ A ⊎ B
-em→→-disjunction (inj₁ a) f  = inj₂ (f a)
-em→→-disjunction (inj₂ ¬a) f = inj₁ ¬a
+  → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
+em→→-disjunction a⊎¬a f 
+    with a⊎¬a
+... | inj₁ a  = inj₂ (f a)
+... | inj₂ ¬a = inj₁ ¬a
 
-em→de-morgan : ∀ {A B : Set}
-  → A ⊎ ¬ A
-  → B ⊎ ¬ B
+em→de-morgan : 
+    (∀ {A : Set} → A ⊎ ¬ A)
     ---------------------
-  → ¬ (¬ A × ¬ B) → A ⊎ B
-em→de-morgan (inj₁ a)  _         f = inj₁ a
-em→de-morgan _         (inj₁ b)  f = inj₂ b
-em→de-morgan (inj₂ ¬a) (inj₂ ¬b) f = ⊥-elim (f ⟨ ¬a , ¬b ⟩)
+  → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
+em→de-morgan x⊎¬x f
+    with ⟨ x⊎¬x , x⊎¬x ⟩
+... | ⟨ inj₁ a , _ ⟩        = inj₁ a
+... | ⟨ _ , inj₁ b ⟩        = inj₂ b
+... | ⟨ inj₂ ¬a , inj₂ ¬b ⟩ = ⊥-elim (f ⟨ ¬a , ¬b ⟩)
 
 -- Double negation implies all others
 ¬-double-elim→em : 
     (∀ {A : Set} → ¬ ¬ A → A)
     -------------------------
   → ∀ {A : Set} → A ⊎ ¬ A
-¬-double-elim→em ¬¬-elim = ¬¬-elim λ{ ¬_a⊎¬a → ¬_a⊎¬a (inj₂ λ{ a → ¬_a⊎¬a (inj₁ a) }) }
+¬-double-elim→em ¬¬-elim = ¬¬-elim λ
+  { 
+    ¬_a⊎¬a → ¬_a⊎¬a (inj₂ λ{ a → ¬_a⊎¬a (inj₁ a) }) 
+  }
 
 ¬-double-elim→pierce-law :
     (∀ {A : Set} → ¬ ¬ A → A)
     ---------------------------------
   → ∀ {A B : Set} → ((A → B) → A) → A
-¬-double-elim→pierce-law ¬¬-elim f = ¬¬-elim λ{ ¬a → ⊥-elim (¬a (f λ{ a → ⊥-elim (¬a a) })) }
+¬-double-elim→pierce-law ¬¬-elim f = ¬¬-elim λ
+  { 
+    ¬a → ⊥-elim (¬a (f λ{ a → ⊥-elim (¬a a) })) 
+  }
 
 ¬-double-elim→→-disjunction : 
     (∀ {A : Set} → ¬ ¬ A → A)
     ---------------------------------
   → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
-¬-double-elim→→-disjunction ¬¬-elim f = 
-  ¬¬-elim λ{ ¬_¬a⊎b → ¬_¬a⊎b (inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) }) }
+¬-double-elim→→-disjunction ¬¬-elim f = ¬¬-elim λ
+  { 
+    ¬_¬a⊎b → ¬_¬a⊎b (inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) }) 
+  }
 
 ¬-double-elim→de-morgan : 
     (∀ {A : Set} → ¬ ¬ A → A)
@@ -284,10 +299,16 @@ pierce-law→→-disjunction :
     (∀ {A B : Set} → ((A → B) → A) → A)
     -----------------------------------
   → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
-pierce-law→→-disjunction pierce f = pierce λ{ ¬_¬a⊎b →  inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) } }
+pierce-law→→-disjunction pierce f = pierce λ
+  { 
+    ¬_¬a⊎b →  inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) } 
+  }
 
--- pierce-law→de-morgan :
---     (∀ {A B : Set} → ((A → B) → A) → A)
---     -------------------------------------
---   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
--- pierce-law→de-morgan pierce ¬_¬a×¬b = pierce λ{ ¬_a⊎b → ⊥-elim {!   !} }
+pierce-law→de-morgan :
+    (∀ {A B : Set} → ((A → B) → A) → A)
+    -------------------------------------
+  → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
+pierce-law→de-morgan pierce ¬_¬a×¬b = pierce λ
+  {
+    ¬_a⊎b → ⊥-elim (¬_¬a×¬b ⟨ (λ{ a → ¬_a⊎b (inj₁ a) }) , ((λ{ b → ¬_a⊎b (inj₂ b) })) ⟩)
+  }
