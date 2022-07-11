@@ -206,10 +206,12 @@ em-irrefutable ¬em = ¬em (inj₂ λ{ a → ¬em (inj₁ a) })
 {-
   Exercise Classical
 -}
+open import Function using (_∘_)
+
 postulate
   ¬-double-elim : ∀ {A : Set}   → ¬ ¬ A → A
   pierce-law    : ∀ {A B : Set} → ((A → B) → A) → A
-  →-disjunction : ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
+  impl-disjunction : ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
   de-morgan     : ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
 
 -- Excluded middle implies all others
@@ -231,11 +233,11 @@ em→pierce-law a⊎¬a f
 ... | inj₁ a  = a
 ... | inj₂ ¬a = f λ{a → ⊥-elim (¬a a)}
 
-em→→-disjunction :
+em→impl-disjunction :
     (∀ {A : Set} → A ⊎ ¬ A)
     -----------------
   → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
-em→→-disjunction a⊎¬a f 
+em→impl-disjunction a⊎¬a f 
     with a⊎¬a
 ... | inj₁ a  = inj₂ (f a)
 ... | inj₂ ¬a = inj₁ ¬a
@@ -269,11 +271,11 @@ em→de-morgan x⊎¬x f
     ¬a → ⊥-elim (¬a (f λ{ a → ⊥-elim (¬a a) })) 
   }
 
-¬-double-elim→→-disjunction : 
+¬-double-elim→impl-disjunction : 
     (∀ {A : Set} → ¬ ¬ A → A)
     ---------------------------------
   → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
-¬-double-elim→→-disjunction ¬¬-elim f = ¬¬-elim λ
+¬-double-elim→impl-disjunction ¬¬-elim f = ¬¬-elim λ
   { 
     ¬_¬a⊎b → ¬_¬a⊎b (inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) }) 
   }
@@ -300,11 +302,11 @@ pierce-law→¬-double-elim : ∀ {A B : Set}
   → ∀ {A : Set} → ¬ ¬ A → A
 pierce-law→¬-double-elim pierce ¬¬a = pierce λ{ ¬a → ⊥-elim (¬¬a ¬a) }
 
-pierce-law→→-disjunction :
+pierce-law→impl-disjunction :
     (∀ {A B : Set} → ((A → B) → A) → A)
     -----------------------------------
   → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
-pierce-law→→-disjunction pierce f = pierce λ
+pierce-law→impl-disjunction pierce f = pierce λ
   { 
     ¬_¬a⊎b →  inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) } 
   }
@@ -319,29 +321,26 @@ pierce-law→de-morgan pierce ¬_¬a×¬b = pierce λ
   }
 
 -- Implication as disjunction implies all others
-→-disjunction→em : 
+impl-disjunction→em : 
     (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
     -----------------------------------
   → ∀ {A : Set} → A ⊎ ¬ A
-→-disjunction→em disj = _≃_.to ⊎-comm (disj λ{ a → a })
+impl-disjunction→em disj = _≃_.to ⊎-comm (disj λ{ a → a })
 
-→-disjunction→¬-double-elim : 
+impl-disjunction→¬-double-elim : 
     (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
     -----------------------------------
   → ∀ {A : Set} → ¬ ¬ A → A
-→-disjunction→¬-double-elim disj ¬¬a = case-⊎ 
-  ( λ ¬a → ⊥-elim (¬¬a ¬a) )
-  ( λ a  → a )
-  ( disj λ{ a → a } )
+impl-disjunction→¬-double-elim = em→¬-double-elim ∘ impl-disjunction→em
 
--- →-disjunction→pierce-law : 
---     (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
---     -----------------------------------
---   → ∀ {A B : Set} → ((A → B) → A) → A
--- →-disjunction→pierce-law disj f = ?
+impl-disjunction→pierce-law : 
+    (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
+    -----------------------------------
+  → ∀ {A B : Set} → ((A → B) → A) → A
+impl-disjunction→pierce-law = em→pierce-law ∘ impl-disjunction→em
 
--- →-disjunction→de-morgan : 
---     (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
---     -----------------------------------
---   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
--- →-disjunction→de-morgan disj = ?
+impl-disjunction→de-morgan : 
+    (∀ {A B : Set} → (A → B) → ¬ A ⊎ B)
+    -----------------------------------
+  → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
+impl-disjunction→de-morgan = em→de-morgan ∘ impl-disjunction→em
