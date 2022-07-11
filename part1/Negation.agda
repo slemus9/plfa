@@ -326,3 +326,28 @@ impl-disjunction→de-morgan :
     -----------------------------------
   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
 impl-disjunction→de-morgan = em→de-morgan ∘ impl-disjunction→em
+
+-- De Morgan implies all others
+de-morgan→em :
+    (∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B)
+    -------------------------------------
+  → ∀ {A : Set} → A ⊎ ¬ A
+de-morgan→em demorgan = demorgan λ{ ⟨ ¬a , ¬¬a ⟩ → ¬¬a ¬a }
+
+demorgan→¬-double-elim : 
+    (∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B)
+    ---------------------------------------
+  → ∀ {A : Set}   → ¬ ¬ A → A
+demorgan→¬-double-elim = em→¬-double-elim ∘ de-morgan→em
+
+demorgan→pierce-law : 
+    (∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B)
+    ---------------------------------------
+  → ∀ {A B : Set} → ((A → B) → A) → A
+demorgan→pierce-law = em→pierce-law ∘ de-morgan→em
+
+demorgan→impl-disjunction : 
+    (∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B)
+    ---------------------------------------
+  → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
+demorgan→impl-disjunction = em→impl-disjunction ∘ de-morgan→em
