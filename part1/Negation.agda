@@ -257,68 +257,50 @@ em→de-morgan x⊎¬x f
     (∀ {A : Set} → ¬ ¬ A → A)
     -------------------------
   → ∀ {A : Set} → A ⊎ ¬ A
-¬-double-elim→em ¬¬-elim = ¬¬-elim λ
-  { 
-    ¬_a⊎¬a → ¬_a⊎¬a (inj₂ λ{ a → ¬_a⊎¬a (inj₁ a) }) 
-  }
+¬-double-elim→em ¬¬-elim = ¬¬-elim em-irrefutable
 
 ¬-double-elim→pierce-law :
     (∀ {A : Set} → ¬ ¬ A → A)
     ---------------------------------
   → ∀ {A B : Set} → ((A → B) → A) → A
-¬-double-elim→pierce-law ¬¬-elim f = ¬¬-elim λ
-  { 
-    ¬a → ⊥-elim (¬a (f λ{ a → ⊥-elim (¬a a) })) 
-  }
+¬-double-elim→pierce-law = em→pierce-law ∘ ¬-double-elim→em
 
 ¬-double-elim→impl-disjunction : 
     (∀ {A : Set} → ¬ ¬ A → A)
     ---------------------------------
   → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
-¬-double-elim→impl-disjunction ¬¬-elim f = ¬¬-elim λ
-  { 
-    ¬_¬a⊎b → ¬_¬a⊎b (inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) }) 
-  }
+¬-double-elim→impl-disjunction = em→impl-disjunction ∘ ¬-double-elim→em
 
 ¬-double-elim→de-morgan : 
     (∀ {A : Set} → ¬ ¬ A → A)
     -------------------------------------
   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
-¬-double-elim→de-morgan ¬¬-elim ¬_¬a×¬b = ¬¬-elim λ
-  { 
-    ¬_a⊎b → ¬_¬a×¬b ⟨ ( λ a → ¬_a⊎b (inj₁ a) ) , ( λ b → ¬_a⊎b (inj₂ b) ) ⟩ 
-  }
+¬-double-elim→de-morgan = em→de-morgan ∘ ¬-double-elim→em
 
 -- Pierce law implies all others
 pierce-law→em :
     (∀ {A B : Set} → ((A → B) → A) → A)
     -----------------------------------
   → ∀ {A : Set} → A ⊎ ¬ A
-pierce-law→em pierce = pierce λ{ ¬em → ⊥-elim (em-irrefutable ¬em) }
+pierce-law→em pierce = pierce (⊥-elim ∘ em-irrefutable)
 
 pierce-law→¬-double-elim : ∀ {A B : Set}
   → (∀ {A B : Set} → ((A → B) → A) → A)
     -----------------------------------
   → ∀ {A : Set} → ¬ ¬ A → A
-pierce-law→¬-double-elim pierce ¬¬a = pierce λ{ ¬a → ⊥-elim (¬¬a ¬a) }
+pierce-law→¬-double-elim = em→¬-double-elim ∘ pierce-law→em
 
 pierce-law→impl-disjunction :
     (∀ {A B : Set} → ((A → B) → A) → A)
     -----------------------------------
   → ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
-pierce-law→impl-disjunction pierce f = pierce λ
-  { 
-    ¬_¬a⊎b →  inj₁ λ{ a → ¬_¬a⊎b (inj₂ (f a)) } 
-  }
+pierce-law→impl-disjunction = em→impl-disjunction ∘ pierce-law→em
 
 pierce-law→de-morgan :
     (∀ {A B : Set} → ((A → B) → A) → A)
     -------------------------------------
   → ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
-pierce-law→de-morgan pierce ¬_¬a×¬b = pierce λ
-  {
-    ¬_a⊎b → ⊥-elim (¬_¬a×¬b ⟨ ( λ a → ¬_a⊎b (inj₁ a) ) , ( λ b → ¬_a⊎b (inj₂ b) ) ⟩)
-  }
+pierce-law→de-morgan = em→de-morgan ∘ pierce-law→em
 
 -- Implication as disjunction implies all others
 impl-disjunction→em : 
