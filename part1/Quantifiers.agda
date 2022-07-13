@@ -1,7 +1,7 @@
 module part1.Quantifiers where
 
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl)
+open Eq using (_≡_; refl; sym; cong)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
 open import Relation.Nullary using (¬_)
 open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
@@ -156,3 +156,152 @@ syntax ∃-syntax (λ x → B) = ∃[ x ] B
   ; from∘to = λ f → refl
   ; to∘from = λ g → extensionality λ{ ⟨ x , Bx ⟩ → refl }
   }
+
+{-
+  Exercise ∃-distrib-⊎
+
+  existentials distribute over disjunction
+-}
+∃-distrib-⊎ : ∀ {A : Set} {B C : A → Set} →
+  ∃[ x ] (B x ⊎ C x) ≃ (∃[ x ] B x) ⊎ (∃[ x ] C x)
+∃-distrib-⊎ = record
+  { to = λ
+    { ⟨ x , inj₁ Bx ⟩ → inj₁ ⟨ x , Bx ⟩
+    ; ⟨ x , inj₂ Cx ⟩ → inj₂ ⟨ x , Cx ⟩
+    }
+  ; from = λ
+    { (inj₁ ⟨ x , Bx ⟩) → ⟨ x , inj₁ Bx ⟩
+    ; (inj₂ ⟨ x , Cx ⟩) → ⟨ x , inj₂ Cx ⟩
+    }
+  ; from∘to = λ
+    { ⟨ x , inj₁ Bx ⟩ → refl
+    ; ⟨ x , inj₂ Cx ⟩ → refl
+    }
+  ; to∘from = λ
+    { (inj₁ ⟨ x , Bx ⟩) → refl
+    ; (inj₂ ⟨ x , Cx ⟩) → refl
+    }
+  }
+{-
+  Exercise ∃×-implies-×∃
+
+  existential of conjunctions implies a conjunction of existentials
+
+  The converse does not hold, since for
+
+    (∃[ x1 ] B x1) × (∃[ x2 ] C x2)
+
+  x1 may be different from x2, and so, we can not unify them into
+
+    ∃[ x ] (B x × C x)
+
+  (the x that makes ∃[ x ] B x hold, may be different from the one that
+  makes ∃[ x2 ] C x2 hold)
+-}
+∃×-implies-×∃ : ∀ {A : Set} {B C : A → Set} →
+  ∃[ x ] (B x × C x) → (∃[ x ] B x) × (∃[ x ] C x)
+∃×-implies-×∃ ⟨ x , ⟨ Bx , Cx ⟩ ⟩ = ⟨ ⟨ x , Bx ⟩ , ⟨ x , Cx ⟩ ⟩ 
+
+{-
+  An existential example
+
+  even n iff ∃[ m ] ( m * 2 ≡ n)
+
+  odd n iff ∃[ m ] (1 + m * 2 ≡ n)
+-}
+open import part1.Relations using (even; odd)
+
+even-∃ : ∀ {n : ℕ} → even n → ∃[ m ] (    m * 2 ≡ n)
+odd-∃  : ∀ {n : ℕ} →  odd n → ∃[ m ] (1 + m * 2 ≡ n)
+
+even-∃ even.zero        = ⟨ zero , refl ⟩
+even-∃ (even.suc odd_n) 
+    {-
+      Inductive case. Prove that
+
+        even (suc n) → ∃[ m ] (m * 2 ≡ suc n)
+
+      We have that (odd n) holds since even (suc n) holds. Hence:
+
+        odd-∃ odd_n → ∃[ m ] (1 + m * 2 ≡ n)
+                    → ⟨ m , refl ⟩
+
+      We need to prove that ∃[ m' ] (m' * 2 ≡ suc (suc (m * 2)))
+      
+      If m' = suc m, then 
+
+        (suc m) * 2 ≡ 2 + m * 2 ≡ suc (suc (m * 2))
+    -}
+    with odd-∃ odd_n 
+... | ⟨ m , refl ⟩ = ⟨ suc m , refl ⟩
+
+odd-∃ (odd.suc even_n) 
+    {-
+      Inductive case. Prove that
+
+        odd (suc n) → ∃[ m ] (1 + m * 2 ≡ suc n)
+
+      We have that (even n) holds since odd (suc n) holds. Hence:
+
+        even-∃ even_n → ∃[ m ] (m * 2 ≡ n)
+                      → ⟨ m , refl ⟩
+
+      We need to prove that ∃[ m' ] (1 + m' * 2 ≡ suc (m * 2)),
+      which holds if m' = m
+    -}
+    with even-∃ even_n
+... | ⟨ m , refl ⟩ = ⟨ m , refl ⟩
+
+∃-even : ∀ {n : ℕ} → ∃[ m ] (    m * 2 ≡ n) → even n
+∃-odd  : ∀ {n : ℕ} → ∃[ m ] (1 + m * 2 ≡ n) →  odd n
+
+∃-even ⟨ zero , refl ⟩  = even.zero
+∃-even ⟨ suc m , refl ⟩ = even.suc (∃-odd ⟨ m , refl ⟩)
+
+∃-odd ⟨ m , refl ⟩ = odd.suc (∃-even ⟨ m , refl ⟩)
+
+{-
+  Exercise ∃-even-odd
+
+  2 * m ≡ suc (suc zero) * m
+        ≡ m + (suc zero) * m
+        ≡ m + (m + zero * m)
+        ≡ m + (m + zero)
+-}
+open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
+open import Data.Nat.Properties using (+-assoc; +-identityʳ; +-suc; +-comm)
+
+even-∃' : ∀ {n : ℕ} → even n → ∃[ m ] (    2 * m ≡ n)
+odd-∃'  : ∀ {n : ℕ} →  odd n → ∃[ m ] (2 * m + 1 ≡ n)
+
+even-∃' even.zero    = ⟨ zero , refl ⟩
+even-∃' (even.suc odd_n)
+    with odd-∃' odd_n
+... | ⟨ m , refl ⟩ = ⟨ suc m , 2*m≡n m ⟩
+  where
+    2*m≡n : ∀ (m : ℕ) → suc m + (suc m + 0) ≡ suc (m + (m + 0) + 1)
+    2*m≡n m
+      rewrite +-comm (m + (m + 0)) 1 
+      | +-identityʳ m 
+      | +-suc m m = refl
+
+odd-∃' (odd.suc even_n) 
+    with even-∃' even_n
+... | ⟨ m , refl ⟩ = ⟨ m , +-comm (m + (m + 0)) 1 ⟩ 
+
+-- ∃-even' : ∀ {n : ℕ} → ∃[ m ] (    2 * m ≡ n) → even n
+-- ∃-odd'  : ∀ {n : ℕ} → ∃[ m ] (2 * m + 1 ≡ n) →  odd n
+
+-- ∃-even' ⟨ zero , refl ⟩  = even.zero
+-- ∃-even' ⟨ suc m , refl ⟩ = even.suc (∃-odd' ⟨ m , 2*m+1≡n m ⟩) 
+--   where
+--     2*m+1≡n : ∀ (m : ℕ) → 2 * m + 1 ≡ m + 1 * suc m
+--     2*m+1≡n m 
+--       rewrite +-suc m (m + 0) 
+--       | +-suc (m + (m + 0)) 0
+--       | sym (+-assoc m m 0)
+--       | +-identityʳ (m + m) 
+--       | +-identityʳ (m + m) = refl
+
+-- ∃-odd' ⟨ m , refl ⟩ 
+--   rewrite +-comm (m + (m + 0)) 1 = odd.suc (∃-even' ⟨ m , refl ⟩)
