@@ -289,19 +289,42 @@ odd-∃' (odd.suc even_n)
     with even-∃' even_n
 ... | ⟨ m , refl ⟩ = ⟨ m , +-comm (m + (m + 0)) 1 ⟩ 
 
--- ∃-even' : ∀ {n : ℕ} → ∃[ m ] (    2 * m ≡ n) → even n
--- ∃-odd'  : ∀ {n : ℕ} → ∃[ m ] (2 * m + 1 ≡ n) →  odd n
 
--- ∃-even' ⟨ zero , refl ⟩  = even.zero
--- ∃-even' ⟨ suc m , refl ⟩ = even.suc (∃-odd' ⟨ m , 2*m+1≡n m ⟩) 
---   where
---     2*m+1≡n : ∀ (m : ℕ) → 2 * m + 1 ≡ m + 1 * suc m
---     2*m+1≡n m 
---       rewrite +-suc m (m + 0) 
---       | +-suc (m + (m + 0)) 0
---       | sym (+-assoc m m 0)
---       | +-identityʳ (m + m) 
---       | +-identityʳ (m + m) = refl
+{- 
+  For some reason, Agda says this recursion does not terminate.
+  If we define the functions with curried parameters instead of
+  a pair, it works
 
--- ∃-odd' ⟨ m , refl ⟩ 
---   rewrite +-comm (m + (m + 0)) 1 = odd.suc (∃-even' ⟨ m , refl ⟩)
+  ∃-even' : ∀ {n : ℕ} → ∃[ m ] (    2 * m ≡ n) → even n
+  ∃-odd'  : ∀ {n : ℕ} → ∃[ m ] (2 * m + 1 ≡ n) →  odd n
+
+  ∃-even' ⟨ zero , refl ⟩  = even.zero
+  ∃-even' ⟨ suc m , refl ⟩ = even.suc (∃-odd' ⟨ m , 2*m+1≡n m ⟩) 
+    where
+      2*m+1≡n : ∀ (m : ℕ) → 2 * m + 1 ≡ m + 1 * suc m
+      2*m+1≡n m 
+        rewrite +-suc m (m + 0) 
+        | +-suc (m + (m + 0)) 0
+        | sym (+-assoc m m 0)
+        | +-identityʳ (m + m) 
+        | +-identityʳ (m + m) = refl
+
+  ∃-odd' ⟨ m , refl ⟩ 
+    rewrite +-comm (m + (m + 0)) 1 = odd.suc (∃-even' ⟨ m , refl ⟩)
+-}
+∃-even' : ∀ {n : ℕ} (m : ℕ) → (    2 * m ≡ n) → even n
+∃-odd'  : ∀ {n : ℕ} (m : ℕ) → (2 * m + 1 ≡ n) →  odd n
+
+∃-even' zero refl    = even.zero
+∃-even' (suc m) refl = even.suc (∃-odd' m (2*m+1≡n m)) 
+  where
+    2*m+1≡n : ∀ (m : ℕ) → 2 * m + 1 ≡ m + 1 * suc m
+    2*m+1≡n m 
+      rewrite +-suc m (m + 0) 
+      | +-suc (m + (m + 0)) 0
+      | sym (+-assoc m m 0)
+      | +-identityʳ (m + m) 
+      | +-identityʳ (m + m) = refl
+
+∃-odd' m refl 
+  rewrite +-comm (m + (m + 0)) 1 = odd.suc (∃-even' m refl)
