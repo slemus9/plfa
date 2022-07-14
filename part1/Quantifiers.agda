@@ -6,7 +6,7 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
 open import Relation.Nullary using (¬_)
 open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import plfa.part1.Isomorphism using (_≃_; extensionality)
+open import plfa.part1.Isomorphism using (_≃_; extensionality; _⇔_)
 open import Function using (_∘_)
 
 {-
@@ -328,3 +328,53 @@ odd-∃' (odd.suc even_n)
 
 ∃-odd' m refl 
   rewrite +-comm (m + (m + 0)) 1 = odd.suc (∃-even' m refl)
+
+{-
+  Exercise ∃-+-≤
+
+  Show that y ≤ z holds if and only if there exists a x such that x + y ≡ z
+-}
+open import part1.Relations using (_≤_; ≤-refl)
+open _≤_
+open _⇔_
+
+-- helpers 
+
+-- solution
+∃-+-≤-to : ∀ {y z : ℕ} 
+  → y ≤ z → (∃[ x ] (x + y ≡ z))
+∃-+-≤-to {.0} {zero} z≤n = ⟨ zero , refl ⟩
+∃-+-≤-to {.0} {suc z} z≤n = ⟨ suc z , +-identityʳ (suc z) ⟩
+{-
+  Inductive Case. Prove that:
+    s≤s y<z → (∃[ x ] (x + suc y ≡ suc z))
+
+  By Inductive Hypothesis, we know that ∃[ k ] (k + y ≡ z)
+
+  If x = k
+  x + suc y ≡ k + suc y
+            ≡ suc (k + y)
+            ≡ suc z
+-}
+∃-+-≤-to {suc y} {suc z} (s≤s y<z) 
+    with ∃-+-≤-to y<z 
+... | ⟨ k , refl ⟩ = ⟨ k , +-suc k y ⟩
+
+∃-+-≤-from : ∀ {y z : ℕ} 
+  → (∃[ x ] (x + y ≡ z)) → y ≤ z
+∃-+-≤-from {y} {z} ⟨ zero , refl ⟩          = ≤-refl
+∃-+-≤-from {zero} {suc z} ⟨ suc x , refl ⟩  = z≤n
+∃-+-≤-from {suc y} {suc z} ⟨ suc x , e ⟩    = s≤s (∃-+-≤-from ⟨ suc x , sucx+y≡z e ⟩)
+  where 
+    sucx+y≡z : ∀ {x y z : ℕ}
+      → suc (x + suc y) ≡ suc z
+      → suc x + y ≡ z
+    sucx+y≡z {x} {y} {z} refl
+      rewrite +-suc x y = refl
+
+∃-+-≤ : ∀ {y z : ℕ} 
+  → (y ≤ z) ⇔ (∃[ x ] (x + y ≡ z))
+∃-+-≤ = record 
+  { to = ∃-+-≤-to 
+  ; from = ∃-+-≤-from 
+  }
