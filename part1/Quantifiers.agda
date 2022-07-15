@@ -338,9 +338,6 @@ open import part1.Relations using (_≤_; ≤-refl)
 open _≤_
 open _⇔_
 
--- helpers 
-
--- solution
 ∃-+-≤-to : ∀ {y z : ℕ} 
   → y ≤ z → (∃[ x ] (x + y ≡ z))
 ∃-+-≤-to {.0} {zero} z≤n = ⟨ zero , refl ⟩
@@ -378,3 +375,28 @@ open _⇔_
   { to = ∃-+-≤-to 
   ; from = ∃-+-≤-from 
   }
+
+{-
+  Existentials, Universals, and Negation
+-}
+¬∃≃∀¬ : ∀ {A : Set} {B : A → Set}
+  → (¬ ∃[ x ] B x) ≃ ∀ x → ¬ B x
+¬∃≃∀¬ = record 
+  { to = λ ¬∃x:Bx x Bx → ¬∃x:Bx ⟨ x , Bx ⟩ 
+  ; from = λ{ ∀x:¬Bx ⟨ x , Bx ⟩ → (∀x:¬Bx x) Bx} 
+  ; from∘to = λ ¬∃x:Bx → extensionality λ{ ⟨ x , Bx ⟩ → refl } 
+  ; to∘from = λ ∀x:¬Bx → refl 
+  }
+
+{-
+  Exercise ∃¬-implies-¬∀
+  Show that existential of a negation implies negation of a universal
+
+  We cannot prove the converse scenario, just from the fact that ¬ (∀ x → B x),
+  we can not derive a particular x for wich B x does not hold
+-}
+∃¬-implies-¬∀ : ∀ {A : Set} {B : A → Set}
+  → ∃[ x ] (¬ B x)
+    --------------
+  → ¬ (∀ x → B x)
+∃¬-implies-¬∀ ⟨ x , ¬Bx ⟩ ∀x:Bx = ¬Bx (∀x:Bx x)
