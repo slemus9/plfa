@@ -269,3 +269,62 @@ iff-⇔ (yes _) (yes _) = refl
 iff-⇔ (yes _) (no _)  = refl
 iff-⇔ (no _)  (yes _) = refl
 iff-⇔ (no _)  (no _)  = refl
+
+-- Proof by reflection
+minus : (m n : ℕ) (n≤m : n ≤ m) → ℕ
+minus m       zero    _         = m
+minus (suc m) (suc n) (s≤s n≤m) = minus m n n≤m
+
+-- it is painful to use, since we have to explicitly provide the proof that n ≤ m
+_ : minus 5 3 (s≤s (s≤s (s≤s z≤n))) ≡ 2
+_ = refl
+
+{-
+  Use the Dec data type
+
+  Use the implicit type T ⌊ n ≤? m ⌋, which does the following:
+
+  1. run the decision procedure n ≤? m. This provides the evidence of whether n ≤ m holds or not
+  2. erase the evidence to a boolean using ⌊ ⌋
+  3. apply T to map the booleans to the world of evidence
+
+  An implicit argument of this type works as a guard
+
+  We can safely use _-_ as long as we statically know the two numbers
+-}
+_-_ : (m n : ℕ) {n≤m : T ⌊ n ≤? m ⌋} → ℕ
+_-_ m n {n≤m} = minus m n (toWitness n≤m)
+
+True : ∀ {Q} → Dec Q → Set
+True Q = T ⌊ Q ⌋
+
+{-
+  Exercise False
+-}
+F : Bool → Set
+F true  = ⊥
+F false = ⊤
+
+False : ∀ {Q} → Dec Q → Set
+False Q = F ⌊ Q ⌋
+
+toWitnessFalse : ∀ {A : Set} {D : Dec A} → False D → ¬ A
+toWitnessFalse {A} {yes a} ()
+toWitnessFalse {A} {no ¬a} tt = ¬a
+
+fromWitnessFalse : ∀ {A : Set} {D : Dec A} → ¬ A → False D
+fromWitnessFalse {A} {yes a} ¬a = ¬a a
+fromWitnessFalse {A} {no ¬a} _  = tt
+
+{-
+  Standard Library
+
+  import Data.Bool.Base using (Bool; true; false; T; _∧_; _∨_; not)
+  import Data.Nat using (_≤?_)
+  import Relation.Nullary using (Dec; yes; no)
+  import Relation.Nullary.Decidable using (⌊_⌋; True; toWitness; fromWitness)
+  import Relation.Nullary.Negation using (¬?)
+  import Relation.Nullary.Product using (_×-dec_)
+  import Relation.Nullary.Sum using (_⊎-dec_)
+  import Relation.Binary using (Decidable)
+-}
