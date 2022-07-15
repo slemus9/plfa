@@ -18,3 +18,7 @@
 ## Isomorphism
 
 - [ ] Bin-embedding
+
+## Quantifiers
+
+- [ ] Bin-isomorphism

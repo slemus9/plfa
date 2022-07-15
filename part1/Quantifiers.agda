@@ -400,3 +400,9 @@ open _⇔_
     --------------
   → ¬ (∀ x → B x)
 ∃¬-implies-¬∀ ⟨ x , ¬Bx ⟩ ∀x:Bx = ¬Bx (∀x:Bx x)
+
+{-
+  Standard Library
+
+  import Data.Product using (Σ; _,_; ∃; Σ-syntax; ∃-syntax)
+-}
