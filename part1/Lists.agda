@@ -1,7 +1,7 @@
 module part1.Lists where 
 
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl; sym; trans; cong)
+open Eq using (_≡_; refl; sym; trans; cong; cong₂)
 open Eq.≡-Reasoning
 open import Data.Bool using (Bool; true; false; T; _∧_; _∨_; not)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _≤_; s≤s; z≤n)
@@ -11,7 +11,7 @@ open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Data.Product using (_×_; ∃; ∃-syntax) renaming (_,_ to ⟨_,_⟩)
 open import Function using (_∘_)
 open import Level using (Level)
-open import part1.Isomorphism using (_≃_; _⇔_)
+open import part1.Isomorphism using (_≃_; _⇔_; extensionality)
 
 data List (A : Set) : Set where
   []  : List A
@@ -147,3 +147,106 @@ reverse-involutive [] = refl
 reverse-involutive (x :: xs) 
   rewrite reverse-++-distrib (reverse xs) [ x ]
   | reverse-involutive xs = refl
+
+-- Faster Reverse
+shunt : ∀ {A : Set} → List A → List A → List A
+shunt []        ys  =  ys
+shunt (x :: xs) ys  =  shunt xs (x :: ys)
+
+shunt-reverse : ∀ {A : Set} (xs ys : List A)
+  → shunt xs ys ≡ reverse xs ++ ys
+shunt-reverse [] ys =
+  begin
+    shunt [] ys
+  ≡⟨⟩
+    ys
+  ≡⟨⟩
+    reverse [] ++ ys
+  ∎
+shunt-reverse (x :: xs) ys =
+  begin
+    shunt (x :: xs) ys
+  ≡⟨⟩
+    shunt xs (x :: ys)
+  ≡⟨ shunt-reverse xs (x :: ys) ⟩
+    reverse xs ++ (x :: ys)
+  ≡⟨⟩
+    reverse xs ++ ([ x ] ++ ys)
+  ≡⟨ sym (++-assoc (reverse xs) [ x ] ys) ⟩
+    (reverse xs ++ [ x ]) ++ ys
+  ≡⟨⟩
+    reverse (x :: xs) ++ ys
+  ∎
+
+reverse′ : ∀ {A : Set} → List A → List A
+reverse′ xs = shunt xs []
+
+reverses : ∀ {A : Set} (xs : List A)
+  → reverse′ xs ≡ reverse xs
+reverses xs =
+  begin
+    reverse′ xs
+  ≡⟨⟩
+    shunt xs []
+  ≡⟨ shunt-reverse xs [] ⟩
+    reverse xs ++ []
+  ≡⟨ ++-identityʳ (reverse xs) ⟩
+    reverse xs
+  ∎
+
+-- Map
+map : ∀ {A B : Set} → (A → B) → List A → List B
+map f []         =  []
+map f (x :: xs)  =  f x :: map f xs
+
+sucs : List ℕ → List ℕ
+sucs = map suc
+
+{-
+  Exercise map-compose
+
+  (map g ∘ map f) (x :: xs) ≡ map g (map f (x :: xs))
+                            ≡ map g (f x :: map f xs)
+                            ≡ g (f x) :: map g (map f xs)
+
+-}
+map-compose : ∀ {A B C : Set} (g : B → C) (f : A → B)
+  → map (g ∘ f) ≡ map g ∘ map f
+map-compose g = extensionality ∘ go g
+  where
+    go : ∀ {A B C : Set} (g : B → C) (f : A → B) (xs : List A)
+      → map (g ∘ f) xs ≡ (map g ∘ map f) xs
+    go g f []        = refl
+    go g f (x :: xs) = 
+      begin
+        g (f x) :: map (g ∘ f) xs
+      ≡⟨ cong (g (f x) ::_) (go g f xs) ⟩
+        g (f x) :: (map g ∘ map f) xs
+      ≡⟨⟩
+        map g (map f (x :: xs))
+      ≡⟨⟩
+        (map g ∘ map f) (x :: xs)
+      ∎
+
+{-
+  Exercise map-++-distribute
+-}
+map-++-distribute : ∀ {A B : Set} (f : A → B) (xs ys : List A)
+  → map f (xs ++ ys) ≡ map f xs ++ map f ys
+map-++-distribute f []        ys    = refl
+map-++-distribute f (x :: xs) ys 
+  rewrite map-++-distribute f xs ys = refl
+
+{-
+  Exercise map-Tree
+-}
+data Tree (A B : Set) : Set where
+  leaf : A → Tree A B
+  node : Tree A B → B → Tree A B → Tree A B
+
+map-Tree : ∀ {A B C D : Set} → (A → C) → (B → D) → Tree A B → Tree C D
+map-Tree f g (leaf a)            = leaf (f a)
+map-Tree f g (node left b right) = node mapLeft (g b) mapRight
+  where
+    mapLeft  = map-Tree f g left
+    mapRight = map-Tree f g right
