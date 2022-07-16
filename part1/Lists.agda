@@ -250,3 +250,75 @@ map-Tree f g (node left b right) = node mapLeft (g b) mapRight
   where
     mapLeft  = map-Tree f g left
     mapRight = map-Tree f g right
+
+-- Fold
+foldr : ∀ {A B : Set} → (A → B → B) → B → List A → B
+foldr _⊗_ e []        =  e
+foldr _⊗_ e (x :: xs)  =  x ⊗ foldr _⊗_ e xs
+
+sum : List ℕ → ℕ
+sum = foldr _+_ 0
+
+{-
+  Exercise product
+-}
+product : List ℕ → ℕ
+product = foldr _*_ 1
+
+{-
+  Exercise foldr-++
+-}
+foldr-++ : ∀ {A B : Set} (_⊗_ : A → B → B) (e : B) (xs ys : List A)
+  → foldr _⊗_ e (xs ++ ys) ≡ foldr _⊗_ (foldr _⊗_ e ys) xs
+foldr-++ _⊗_ e []        ys = refl
+foldr-++ _⊗_ e (x :: xs) ys = cong (x ⊗_) (foldr-++ _⊗_ e xs ys)
+
+{-
+  Exercise foldr-::
+-}
+foldr-:: : ∀ {A : Set} (xs : List A)
+  → foldr _::_ [] xs ≡ xs
+foldr-:: []        = refl
+foldr-:: (x :: xs) = cong (x ::_) (foldr-:: xs)
+
+++-as-foldr : ∀ {A : Set} (xs ys : List A)
+  → xs ++ ys ≡ foldr _::_ ys xs
+++-as-foldr xs ys 
+  rewrite sym (foldr-:: (xs ++ ys))
+  | foldr-++ _::_ [] xs ys
+  | foldr-:: ys = refl
+
+{-
+  Exercise map-is-foldr
+-}
+map-is-foldr : ∀ {A B : Set} (f : A → B)
+  → map f ≡ foldr (λ x xs → f x :: xs) []
+map-is-foldr = extensionality ∘ go
+  where
+    go : ∀ {A B : Set} (f : A → B) (xs : List A)
+      → map f xs ≡ foldr (λ y ys → f y :: ys) [] xs
+    go f []        = refl
+    go f (x :: xs) = cong (f x ::_) (go f xs)
+
+{-
+  Exercise fold-Tree
+-}
+fold-Tree : ∀ {A B C : Set} → (A → C) → (C → B → C → C) → Tree A B → C
+fold-Tree transformLeaf combine (leaf a)            = transformLeaf a
+fold-Tree transformLeaf combine (node left b right) = combine reducedLeft b reducedRight
+  where
+    reducedLeft  = fold-Tree transformLeaf combine left
+    reducedRight = fold-Tree transformLeaf combine right
+
+{-
+  Exercise map-is-fold-Tree
+-}
+map-is-fold-Tree : ∀ {A B C D : Set} (f : A → C) (g : B → D)
+  → map-Tree f g ≡ fold-Tree (leaf ∘ f) (λ left b right → node left (g b) right)
+map-is-fold-Tree f g = extensionality (go f g)
+  where
+    go : ∀ {A B C D : Set} (f : A → C) (g : B → D) (t : Tree A B)
+      → map-Tree f g t ≡ fold-Tree (leaf ∘ f) (λ left b right → node left (g b) right) t
+    go f g (leaf a) = refl
+    go f g (node left b right) 
+      rewrite go f g left | go f g right = refl
