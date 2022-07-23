@@ -416,6 +416,107 @@ foldr-monoid-foldl {A} _⊗_ e ⊗-monoid = extensionality go
       rewrite identityˡ ⊗-monoid x
       | go xs    = sym (foldl-monoid _⊗_ e ⊗-monoid xs x)
 
+-- All
+data All {A : Set} (P : A → Set) : List A → Set where
+  -- P holds for every element of an empty list
+  []   : All P []
+  -- if P holds for the head and P holds for the tail, then P holds for the entire list
+  _::_ : ∀ {x : A} {xs : List A} 
+    → P x 
+    → All P xs 
+    → All P (x :: xs)
+
+_ : All (_≤ 2) [ 0 , 1 , 2 ]
+_ = z≤n :: s≤s z≤n :: s≤s (s≤s z≤n) :: []
+
+-- Any
+data Any {A : Set} (P : A → Set) : List A → Set where
+
+  here  : ∀ {x : A} {xs : List A} 
+    → P x 
+    → Any P (x :: xs)
+
+  there : ∀ {x : A} {xs : List A} 
+    → Any P xs 
+    → Any P (x :: xs)
+
+infix 4 _∈_ _∉_
+
+_∈_ : ∀ {A : Set} (x : A) (xs : List A) → Set
+x ∈ xs = Any (x ≡_) xs
+
+_∉_ : ∀ {A : Set} (x : A) (xs : List A) → Set
+x ∉ xs = ¬ (x ∈ xs)
+
+_ : 0 ∈ [ 0 , 1 , 0 , 2 ]
+_ = here refl
+
+_ : 0 ∈ [ 0 , 1 , 0 , 2 ]
+_ = there (there (here refl))
+
+not-in : 3 ∉ [ 0 , 1 , 0 , 2 ]
+not-in (here ())
+not-in (there (here ()))
+not-in (there (there (here ())))
+not-in (there (there (there (here ()))))
+not-in (there (there (there (there ()))))
+
+-- All And Append
+All-++-⇔ : ∀ {A : Set} {P : A → Set} (xs ys : List A) →
+  All P (xs ++ ys) ⇔ (All P xs × All P ys)
+All-++-⇔ {A} {P} xs ys =
+  record
+    { to       =  to xs ys
+    ; from     =  from xs ys
+    }
+  where
+    to : (xs ys : List A)
+      → All P (xs ++ ys) → (All P xs × All P ys)
+    to []        ys Pys              = ⟨ [] , Pys ⟩
+    to (x :: xs) ys (Px :: P_xs++ys ) 
+        with to xs ys P_xs++ys 
+    ... | ⟨ Pxs , Pys ⟩  = ⟨ Px :: Pxs , Pys ⟩
+
+    from : (xs ys : List A)
+      → (All P xs × All P ys) → All P (xs ++ ys)
+    from []        ys ⟨ _ , Pys ⟩ = Pys
+    from (x :: xs) ys ⟨ Px :: Pxs , Pys ⟩  
+        with from xs ys ⟨ Pxs , Pys ⟩
+    ... | P_xs++ys = Px :: P_xs++ys
+
+{-
+  Exercise Any-++-⇔
+
+  Prove a result similar to All-++-⇔, but with Any in place of All, and a suitable replacement for _×_. 
+  As a consequence, demonstrate an equivalence relating _∈_ and _++_
+-}
+open import part1.Connectives using (_⊎_; inj₁; inj₂)
+
+Any-++-⇔ : ∀ {A : Set} {P : A → Set} (xs ys : List A)
+  → Any P (xs ++ ys) ⇔ (Any P xs ⊎ Any P ys) 
+Any-++-⇔ {A} {P} xs ys = 
+  record 
+    { to   = to xs ys 
+    ; from = from xs ys 
+    }
+  where
+    to : (xs ys : List A)
+      → Any P (xs ++ ys) → (Any P xs ⊎ Any P ys) 
+    to []        ys Pys         = inj₂ Pys
+    to (x :: xs) ys (here Px)   = inj₁ (here Px)
+    to (x :: xs) ys (there P_xs++ys) 
+        with to xs ys P_xs++ys 
+    ... | inj₁ Pxs = inj₁ (there Pxs)
+    ... | inj₂ Pys = inj₂ Pys
+
+    from : (xs ys : List A)
+      → (Any P xs ⊎ Any P ys) → Any P (xs ++ ys)
+    from (x :: xs) ys (inj₁ (here Px))          = here Px
+    from (x :: xs) ys (inj₁ (there Pxs))        = there (from xs ys (inj₁ Pxs))
+    from [] (y :: ys) (inj₂ (here Py))          = here Py
+    from (x :: xs) (y :: ys) (inj₂ (here Py))   = there (from xs (y :: ys) (inj₂ (here Py)))
+    from [] (y :: ys) (inj₂ (there Pys))        = there Pys
+    from (x :: xs) (y :: ys) (inj₂ (there Pys)) = there (from xs (y :: ys) (inj₂ (there Pys))) 
 {-
   Exercise sum-downFrom
 
