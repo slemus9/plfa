@@ -22,3 +22,7 @@
 ## Quantifiers
 
 - [ ] Bin-isomorphism
+
+## Lists
+
+- [ ] Exercise sum-downFrom
