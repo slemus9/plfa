@@ -492,6 +492,11 @@ All-++-⇔ {A} {P} xs ys =
 -}
 open import part1.Connectives using (_⊎_; inj₁; inj₂)
 
+Any-++[] : ∀ {A : Set} → {P : A → Set} (xs : List A)
+  → Any P (xs ++ []) ≡ Any P xs
+Any-++[] xs rewrite ++-identityʳ xs = refl
+
+
 Any-++-⇔ : ∀ {A : Set} {P : A → Set} (xs ys : List A)
   → Any P (xs ++ ys) ⇔ (Any P xs ⊎ Any P ys) 
 Any-++-⇔ {A} {P} xs ys = 
@@ -517,6 +522,34 @@ Any-++-⇔ {A} {P} xs ys =
     from (x :: xs) (y :: ys) (inj₂ (here Py))   = there (from xs (y :: ys) (inj₂ (here Py)))
     from [] (y :: ys) (inj₂ (there Pys))        = there Pys
     from (x :: xs) (y :: ys) (inj₂ (there Pys)) = there (from xs (y :: ys) (inj₂ (there Pys))) 
+
+{-
+  Exercise All-++-≃
+-}
+open _⇔_
+open _≃_
+
+All-++-≃ : ∀ {A : Set} {P : A → Set} (xs ys : List A)
+  → Any P (xs ++ ys) ≃ (Any P xs ⊎ Any P ys) 
+All-++-≃ {A} {P} xs ys = 
+  record 
+    { to = to (Any-++-⇔ xs ys) 
+    ; from = from (Any-++-⇔ xs ys) 
+    ; from∘to = from∘to' xs ys 
+    ; to∘from = {!   !} 
+    }
+  where
+    from∘to' : (xs ys : List A)
+      → (P_xs++ys : Any P (xs ++ ys))
+      → from (Any-++-⇔ xs ys) (to (Any-++-⇔ xs ys) P_xs++ys) ≡ P_xs++ys
+    from∘to' [] (y :: ys) (here Py) = refl
+    from∘to' [] (y :: ys) (there Pys) = refl
+    from∘to' (x :: xs) [] (here Px) = refl
+    from∘to' (x :: xs) [] (there Pxs) = {!  !} 
+    from∘to' (x :: xs) (y :: ys) (here Px) = refl
+    from∘to' (x :: xs) (y :: ys) (there Pxs++y::ys) = {!  !}
+    
+
 {-
   Exercise sum-downFrom
 
