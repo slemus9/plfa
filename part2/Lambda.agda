@@ -100,3 +100,134 @@ mul = μ "*" ⇒ ƛ "m" ⇒ ƛ "n" ⇒
 mulᶜ : Term
 mulᶜ = ƛ "m" ⇒ ƛ "n" ⇒ ƛ "s" ⇒ ƛ "z" ⇒ 
   ` "m" · (` "n" · ` "s") · ` "z"
+
+-- Exercise primed
+var? : (t : Term) → Bool
+var? (` _) = true
+var? _     = false
+
+ƛ'_⇒_ : (t : Term) → {_ : T (var? t)} → Term → Term
+ƛ' (` x) ⇒ N = ƛ x ⇒ N
+
+case'_[zero⇒_|suc_⇒_] : Term → Term → (t : Term) → {_ : T (var? t)} → Term → Term
+case' L [zero⇒ M |suc (` x) ⇒ N ] = case L [zero⇒ M |suc x ⇒ N ]
+
+μ'_⇒_ : (t : Term) → {_ : T (var? t)} → Term → Term
+μ' (` x) ⇒ N  =  μ x ⇒ N
+
+{-
+  Using T, we ensure that we can only use the primed function when we have an 
+  implicit evidence that the required term is a variable. For example, the 
+  following is not possible:
+
+  _ : Term
+  _ = ƛ' two ⇒ two
+-}
+plus' : Term
+plus' = μ' + ⇒ ƛ' m ⇒ ƛ' n ⇒
+  case' m
+    [zero⇒ n
+    |suc m ⇒ `suc (+ · m · n) ]
+  where
+  +  =  ` "+"
+  m  =  ` "m"
+  n  =  ` "n"
+
+mul' : Term
+mul' = μ' * ⇒ ƛ' m ⇒ ƛ' n ⇒ 
+  case' m
+    [zero⇒ `zero
+    |suc m ⇒ plus' · n · (* · m · n)
+    ]
+  where
+  * = ` "*"
+  m = ` "m"
+  n = ` "n"
+
+{-
+  Values
+
+  A value is a term that corresponds to an answer
+
+  suc `suc `suc `suc `zero is a value while plus · two · two is not. 
+  
+  All function abstractions are also values (for example, plus)
+-}
+data Value : Term → Set where
+
+  V-ƛ : ∀ {x N}
+      ---------------
+    → Value (ƛ x ⇒ N)
+
+  V-zero :
+      -----------
+      Value `zero
+
+  V-suc : ∀ {V}
+    → Value V
+      --------------
+    → Value (`suc V)
+
+{-
+  Substitution
+
+  N [ x := V ] - "substitute the term V for free occurences of variable x in the term N"
+
+  Substitution works if V is a closed term (has no free variables)
+
+  (ƛ "z" ⇒ ` "s" · (` "s" · ` "z")) [ "s" := sucᶜ ] yields ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")
+  (ƛ "x" ⇒ ` "y") [ "y" := `zero ] yields ƛ "x" ⇒ `zero
+  (ƛ "x" ⇒ ` "x") [ "x" := `zero ] yields ƛ "x" ⇒ ` "x"
+  (ƛ "y" ⇒ ` "y") [ "x" := `zero ] yields ƛ "y" ⇒ ` "y"
+
+  Substitution with terms that are not closed is possible, but there should be a suitable
+  remaining of variables
+-}
+infix 9 _[_:=_]
+
+_[_:=_] : Term → Id → Term → Term
+
+(` x) [ y := V ] with x ≟ y
+... | yes _ = V
+... | no  _ = ` x
+
+f @ (ƛ x ⇒ N) [ y := V ] with x ≟ y
+... | yes _ = f
+... | no  _ = ƛ x ⇒ N [ y := V ]
+
+(L · M) [ y := V ] = L [ y := V ] · M [ y := V ]
+
+(`zero) [ y := V ] = `zero
+
+(`suc M) [ y := V ] = `suc (M [ y := V ])
+
+(case L [zero⇒ M |suc x ⇒ N ]) [ y := V ] with x ≟ y
+... | yes _ = case (L [ y := V ])
+  [zero⇒   M [ y := V ]
+  |suc x ⇒ N
+  ]
+... | no  _ = case (L [ y := V ])
+  [zero⇒   M [ y := V ]
+  |suc x ⇒ N [ y := V ]
+  ]
+
+f @ (μ x ⇒ N) [ y := V ] with x ≟ y
+... | yes _ = f
+... | no  _ = μ x ⇒ N [ y := V ]
+
+-- Examples
+_ : (ƛ "z" ⇒ ` "s" · (` "s" · ` "z")) [ "s" := sucᶜ ]
+      ≡ ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")
+_ = refl
+
+_ : (sucᶜ · (sucᶜ · ` "z")) [ "z" := `zero ] ≡ sucᶜ · (sucᶜ · `zero)
+_ = refl
+
+_ : (ƛ "x" ⇒ ` "y") [ "y" := `zero ] ≡ ƛ "x" ⇒ `zero
+_ = refl
+
+_ : (ƛ "x" ⇒ ` "x") [ "x" := `zero ] ≡ ƛ "x" ⇒ ` "x"
+_ = refl
+
+_ : (ƛ "y" ⇒ ` "y") [ "x" := `zero ] ≡ ƛ "y" ⇒ ` "y"
+_ = refl
