@@ -187,13 +187,15 @@ infix 9 _[_:=_]
 
 _[_:=_] : Term → Id → Term → Term
 
+-- Substitute in a term with a bounded variable
+⟨_withBounded_,_⟩[_:=_] : Term → Id → (Term → Term) → Id → Term → Term
+
 (` x) [ y := V ] with x ≟ y
 ... | yes _ = V
 ... | no  _ = ` x
 
-f @ (ƛ x ⇒ N) [ y := V ] with x ≟ y
-... | yes _ = f
-... | no  _ = ƛ x ⇒ N [ y := V ]
+(ƛ x ⇒ N) [ y := V ] = 
+  ⟨ N withBounded x , (λ t → ƛ x ⇒ t) ⟩[ y := V ]
 
 (L · M) [ y := V ] = L [ y := V ] · M [ y := V ]
 
@@ -201,19 +203,24 @@ f @ (ƛ x ⇒ N) [ y := V ] with x ≟ y
 
 (`suc M) [ y := V ] = `suc (M [ y := V ])
 
-(case L [zero⇒ M |suc x ⇒ N ]) [ y := V ] with x ≟ y
-... | yes _ = case (L [ y := V ])
-  [zero⇒   M [ y := V ]
-  |suc x ⇒ N
-  ]
-... | no  _ = case (L [ y := V ])
-  [zero⇒   M [ y := V ]
-  |suc x ⇒ N [ y := V ]
-  ]
+(case L [zero⇒ M |suc x ⇒ N ]) [ y := V ] =
+  ⟨ N withBounded x , makeTerm ⟩[ y := V ]
+  where
+    makeTerm : Term → Term
+    makeTerm t =
+      case (L [ y := V ])
+        [zero⇒   M [ y := V ]
+        |suc x ⇒ t
+        ]
 
-f @ (μ x ⇒ N) [ y := V ] with x ≟ y
-... | yes _ = f
-... | no  _ = μ x ⇒ N [ y := V ]
+(μ x ⇒ N) [ y := V ] = 
+  ⟨ N withBounded x , (λ t → μ x ⇒ t) ⟩[ y := V ]
+
+-- Exercise _[_:=_]'
+⟨ N withBounded x , makeTerm ⟩[ y := V ] with x ≟ y
+... | yes _ = makeTerm N
+... | no  _ = makeTerm (N [ y := V ])
+
 
 -- Examples
 _ : (ƛ "z" ⇒ ` "s" · (` "s" · ` "z")) [ "s" := sucᶜ ]
@@ -227,7 +234,7 @@ _ : (ƛ "x" ⇒ ` "y") [ "y" := `zero ] ≡ ƛ "x" ⇒ `zero
 _ = refl
 
 _ : (ƛ "x" ⇒ ` "x") [ "x" := `zero ] ≡ ƛ "x" ⇒ ` "x"
-_ = refl
+_ = refl 
 
 _ : (ƛ "y" ⇒ ` "y") [ "x" := `zero ] ≡ ƛ "y" ⇒ ` "y"
 _ = refl
