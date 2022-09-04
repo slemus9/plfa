@@ -238,3 +238,96 @@ _ = refl
 
 _ : (ƛ "y" ⇒ ` "y") [ "x" := `zero ] ≡ ƛ "y" ⇒ ` "y"
 _ = refl
+
+{-
+  Reduction rules for call-by-value lambda calculus.
+
+  Reduce the left hand side until it becomes a value (which should be an abstraction),
+  then reduce the right hand side until it becomes a value, and finally substitute the
+  argument for the variable in the abstraction
+-}
+infix 4 _reducesTo_ 
+
+data _reducesTo_ : Term → Term → Set where
+
+  ξ-·₁ : ∀ {L L' M}
+    → L reducesTo L'
+      ----------------
+    → L · M reducesTo L' · M
+
+  ξ-·₂ : ∀ {V M M'}
+    → Value V
+    → M reducesTo M'
+      ----------------
+    → V · M reducesTo V · M'
+
+  β-ƛ : ∀ {x N V}
+    → Value V
+      ------------------------------
+    → (ƛ x ⇒ N) · V reducesTo N [ x := V ]
+
+  ξ-suc : ∀ {M M'}
+    → M reducesTo M'
+    --------------------
+    → `suc M reducesTo `suc M'
+
+  ξ-case : ∀ {x L L' M N}
+    → L reducesTo L'
+      --------------------------------------------------------------
+    → case L [zero⇒ M |suc x ⇒ N ] reducesTo case L' [zero⇒ M |suc x ⇒ N ]
+
+  β-zero : ∀ {x M N}
+      -------------------------------------------
+    → case `zero [zero⇒ M |suc x ⇒ N ] reducesTo M
+
+  β-suc : ∀ {x V M N}
+    → Value V
+      ------------------------------------------------------
+    → case `suc V [zero⇒ M |suc x ⇒ N ] reducesTo N [ x := V ]
+
+  β-μ : ∀ {x M}
+    → μ x ⇒ M reducesTo M [ x := μ x ⇒ M ]
+
+{-
+  Quiz
+
+  A) (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x"):
+
+        (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x")
+    --> <β-ƛ>
+        ` "x" ["x" := (ƛ "x" ⇒ ` "x")]
+    = 
+        ƛ "x" ⇒ ` "x"
+
+  B) (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x"):
+    
+    Since (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") --> ƛ "x" ⇒ ` "x"
+    we can apply ξ-·₁:
+
+    let red = (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") reducesTo (ƛ "x" ⇒ ` "x")
+
+        ((ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x")) · (ƛ "x" ⇒ ` "x")
+    --> <ξ-·₁ red>
+        (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x")
+
+  C) twoᶜ · sucᶜ · `zero
+
+    twoᶜ = ƛ "s" ⇒ ƛ "z" ⇒ ` "s" · (` "s" · ` "z")
+    sucᶜ = ƛ "n" ⇒ `suc (` "n")
+
+    Let `red` be the reduction:
+
+        (ƛ "s" ⇒ ƛ "z" ⇒ ` "s" · (` "s" · ` "z")) · sucᶜ
+    --> <β-ƛ>
+        (ƛ "z" ⇒ ` "s" · (` "s" · ` "z")) [ "s" := sucᶜ ]
+    =
+        (ƛ "z" ⇒ ` sucᶜ · (` sucᶜ · ` "z"))
+
+    Then:
+
+        (twoᶜ · sucᶜ) · `zero
+    --> <ξ-·₁ red>
+        (ƛ "z" ⇒ ` sucᶜ · (` sucᶜ · ` "z")) · `zero
+-}
+
+-- Reflexive and Transitive closure
